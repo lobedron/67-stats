@@ -81,7 +81,7 @@
             to   { opacity: 1; transform: translateY(0);}
         }
 
-        /* карточка видео с анимацией */
+        /* карточка видео */
         .video-card {
             transition: opacity 0.2s ease, transform 0.2s ease;
         }
@@ -101,13 +101,22 @@
             aspect-ratio: 16/9;
             object-fit: cover;
         }
+        
+        /* ФИКСИРОВАННАЯ ВЫСОТА ДЛЯ НАЗВАНИЯ — больше не прыгает */
         .video-title {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 500;
             margin: 12px 0 8px;
             line-height: 1.35;
             color: #f0f0f0;
+            min-height: 2.7rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
+        
         .stats-grid {
             background: #0f0f0f;
             border-radius: 24px;
@@ -258,7 +267,7 @@
         @media (max-width: 480px) {
             body { padding: 8px; }
             .stat-number { font-size: 1.2rem; }
-            .video-title { font-size: 1rem; }
+            .video-title { font-size: 0.95rem; min-height: 2.5rem; }
             .filter-chip { padding: 6px 12px; font-size: 0.75rem; }
         }
     </style>
@@ -310,7 +319,7 @@
     </div>
 
     <div class="footer">
-        <span>lobedron</span> &nbsp;|&nbsp; <span id="version">v2.2</span>
+        <span>lobedron</span> &nbsp;|&nbsp; <span id="version">v2.3</span>
     </div>
 </div>
 
@@ -340,7 +349,6 @@
     let viewsChart = null;
     let animationInProgress = false;
 
-    // ---------- Вспомогательные ----------
     function extractVideoId(url) {
         const match = url.match(/(?:v=|\/)([a-zA-Z0-9_-]{11})/);
         return match ? match[1] : null;
@@ -356,7 +364,6 @@
         return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
     }
 
-    // ---------- Аналитика ----------
     function loadAnalytics() {
         const saved = localStorage.getItem('lob_analytics');
         if (saved) analytics = JSON.parse(saved);
@@ -378,7 +385,7 @@
         saveAnalytics();
     }
 
-    function getGrowthRate(videoId, currentViews) {
+    function getGrowthRate(videoId) {
         const data = analytics[videoId];
         if (!data || data.history.length < 2) return null;
         const latest = data.history[0];
@@ -390,7 +397,6 @@
         return { perHour, diff, hours: hoursDiff };
     }
 
-    // ---------- YouTube API ----------
     async function fetchAllVideos() {
         const ids = VIDEO_URLS.map(extractVideoId).filter(id => id);
         if (!ids.length) throw new Error("Нет ссылок");
@@ -427,8 +433,8 @@
             if (currentSort === 'views') currentList = [...allVideos].sort((a,b) => b.views - a.views);
             else if (currentSort === 'growth') {
                 currentList = [...allVideos].sort((a,b) => {
-                    const gA = getGrowthRate(a.id, a.views)?.perHour || 0;
-                    const gB = getGrowthRate(b.id, b.views)?.perHour || 0;
+                    const gA = getGrowthRate(a.id)?.perHour || 0;
+                    const gB = getGrowthRate(b.id)?.perHour || 0;
                     return gB - gA;
                 });
             } else currentList = [...allVideos];
@@ -440,9 +446,8 @@
         }
     }
 
-    // ---------- Построение HTML карточки ----------
     function buildVideoCardHTML(video) {
-        const growth = getGrowthRate(video.id, video.views);
+        const growth = getGrowthRate(video.id);
         let growthHtml = '';
         if (growth) {
             let cls = 'slow';
@@ -469,7 +474,6 @@
         `;
     }
 
-    // ---------- Отрисовка статистики с анимацией ----------
     function renderStatsTab(animate = true) {
         if (currentList.length === 0) return;
         const video = currentList[currentIndex];
@@ -485,7 +489,6 @@
             return;
         }
 
-        // Если анимация уже идёт, не запускаем новую
         if (animationInProgress) return;
         const oldCard = document.querySelector('#videoCard');
         if (!oldCard) {
@@ -501,7 +504,6 @@
             container.innerHTML = newHtml;
             document.getElementById('videoCounter').innerHTML = `${currentIndex+1} / ${currentList.length}`;
             document.getElementById('lastUpdateTime').innerHTML = `🕒 обновлено: ${formatTime(lastUpdateTime)}`;
-            // Добавляем плавное появление
             const newCard = document.querySelector('#videoCard');
             if (newCard) {
                 newCard.classList.add('fade-in');
@@ -513,7 +515,6 @@
         }, 200);
     }
 
-    // ---------- График ----------
     function renderChartTab() {
         const video = currentList[currentIndex];
         if (!video) return;
@@ -555,16 +556,15 @@
         `;
     }
 
-    // ---------- Аналитика (рейтинг) ----------
     function renderInsightsTab() {
         const sorted = [...allVideos].sort((a,b) => {
-            const gA = getGrowthRate(a.id, a.views)?.perHour || 0;
-            const gB = getGrowthRate(b.id, b.views)?.perHour || 0;
+            const gA = getGrowthRate(a.id)?.perHour || 0;
+            const gB = getGrowthRate(b.id)?.perHour || 0;
             return gB - gA;
         });
         let html = `<div style="font-size:0.8rem; margin-bottom:12px;">📊 Рейтинг по скорости роста (просмотров в час)</div>`;
         sorted.forEach((v, idx) => {
-            const growth = getGrowthRate(v.id, v.views);
+            const growth = getGrowthRate(v.id);
             let rate = growth ? `${growth.perHour}` : '—';
             let cls = '';
             if (growth && growth.perHour >= 100) cls = '🔥';
@@ -585,20 +585,18 @@
         else if (activeTab === 'insights') renderInsightsTab();
     }
 
-    // ---------- Сортировка ----------
     function setSort(sortType) {
         if (sortType === 'original') currentList = [...allVideos];
         else if (sortType === 'views') currentList = [...allVideos].sort((a,b) => b.views - a.views);
         else if (sortType === 'growth') currentList = [...allVideos].sort((a,b) => {
-            const gA = getGrowthRate(a.id, a.views)?.perHour || 0;
-            const gB = getGrowthRate(b.id, b.views)?.perHour || 0;
+            const gA = getGrowthRate(a.id)?.perHour || 0;
+            const gB = getGrowthRate(b.id)?.perHour || 0;
             return gB - gA;
         });
         currentIndex = 0;
         renderCurrentTab();
     }
 
-    // ---------- Навигация с анимацией ----------
     function changeVideo(delta) {
         if (animationInProgress) return;
         const newIndex = currentIndex + delta;
@@ -608,7 +606,6 @@
         }
     }
 
-    // ---------- Инициализация ----------
     function init() {
         loadAnalytics();
         refreshData().then(() => {
