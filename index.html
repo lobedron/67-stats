@@ -4,15 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Lob Analytics — Feed</title>
-    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
     <style>
         :root {
-            --bg-main: #0a0a0a;
-            --bg-card: #141414;
+            --bg: #050505;
+            --card-bg: #111111;
+            --border: #222222;
             --accent: #ffffff;
-            --text-secondary: #888;
-            --border: #222;
+            --text-secondary: #888888;
+            --glass: rgba(20, 20, 20, 0.7);
         }
 
         * {
@@ -23,230 +26,249 @@
         }
 
         body {
-            background: var(--bg-main);
-            font-family: 'Geologica', sans-serif;
-            color: #e0e0e0;
-            line-height: 1.5;
+            background-color: var(--bg);
+            color: #efefef;
+            font-family: 'Manrope', sans-serif;
             overflow-x: hidden;
         }
 
-        /* Шапка канала */
-        .channel-header {
+        /* Шапка */
+        .app-header {
             position: sticky;
             top: 0;
             z-index: 100;
-            background: rgba(10, 10, 10, 0.8);
+            background: var(--glass);
             backdrop-filter: blur(20px);
-            padding: 12px 16px;
             border-bottom: 1px solid var(--border);
+            padding: 12px 20px;
             display: flex;
             align-items: center;
             gap: 12px;
         }
 
-        .channel-avatar {
-            width: 40px;
-            height: 40px;
+        .channel-pfp {
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
+            object-fit: cover;
             border: 1px solid var(--border);
         }
 
-        .channel-info h2 {
+        .header-info h1 {
             font-size: 0.9rem;
-            font-weight: 600;
-            color: #fff;
+            font-weight: 700;
+            letter-spacing: -0.2px;
         }
 
-        .channel-info p {
+        .header-info p {
             font-size: 0.7rem;
             color: var(--text-secondary);
         }
 
-        /* Основная лента */
-        .feed-container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 16px;
+        /* Лента видео */
+        .feed-grid {
             display: grid;
-            grid-template-columns: 1fr;
-            gap: 24px;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
         }
 
-        .video-item {
-            background: var(--bg-card);
-            border-radius: 24px;
+        .video-card {
+            background: var(--card-bg);
+            border-radius: 20px;
             overflow: hidden;
             border: 1px solid var(--border);
-            transition: transform 0.2s ease, border-color 0.2s ease;
             cursor: pointer;
+            /* Плавные анимации для карточек */
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                        box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                        border-color 0.3s ease;
         }
 
-        .video-item:active {
+        .video-card:hover {
+            transform: translateY(-6px);
+            border-color: #444;
+            /* Легкое беловатое свечение */
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.08);
+        }
+
+        .video-card:active {
             transform: scale(0.98);
         }
 
-        .thumb-wrapper {
+        .thumb-box {
             position: relative;
             aspect-ratio: 16/9;
             background: #1a1a1a;
         }
 
-        .thumb-wrapper img {
+        .thumb-box img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .video-content {
-            padding: 16px;
+        .card-content {
+            padding: 14px;
         }
 
         .video-title {
-            font-size: 1rem;
-            font-weight: 400;
-            margin-bottom: 12px;
-            color: #f0f0f0;
+            font-size: 0.95rem;
+            font-weight: 500;
+            line-height: 1.4;
+            margin-bottom: 10px;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
 
-        .quick-stats {
+        .card-stats {
             display: flex;
-            gap: 16px;
-            font-size: 0.8rem;
+            gap: 12px;
+            font-size: 0.75rem;
             color: var(--text-secondary);
         }
 
-        .quick-stats span {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        /* Модальное окно (Детали) */
+        /* Детальное окно (Модалка) */
         .modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: var(--bg-main);
+            background: var(--bg);
             z-index: 1000;
-            display: none;
+            display: flex;
             flex-direction: column;
             overflow-y: auto;
-            padding-bottom: 40px;
+            
+            /* Анимация появления модалки */
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
         }
 
-        .modal.active { display: flex; }
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
 
-        .modal-header {
-            padding: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .modal-nav {
+            padding: 16px 20px;
             border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
-        .close-btn {
-            background: var(--border);
+        .close-modal {
+            background: #222;
             border: none;
             color: #fff;
             padding: 8px 16px;
-            border-radius: 40px;
+            border-radius: 30px;
             font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-modal:hover {
+            background: #333;
+            /* Тень для кнопки закрытия */
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
         }
 
         .modal-body {
             padding: 20px;
-            max-width: 600px;
+            max-width: 700px;
             margin: 0 auto;
             width: 100%;
+            
+            /* Анимация выезда контента снизу вверх */
+            transform: translateY(30px);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .chart-card {
-            background: #0f0f0f;
+        .modal.active .modal-body {
+            transform: translateY(0);
+        }
+
+        .detail-chart-box {
+            background: #0a0a0a;
+            border: 1px solid var(--border);
             border-radius: 24px;
             padding: 16px;
             margin: 20px 0;
-            border: 1px solid var(--border);
         }
 
-        .stats-grid {
+        .stat-grid-detail {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 12px;
-            margin-top: 20px;
         }
 
-        .stat-box {
-            background: var(--bg-card);
+        .stat-pill {
+            background: var(--card-bg);
             padding: 16px;
-            border-radius: 20px;
-            text-align: center;
+            border-radius: 18px;
             border: 1px solid var(--border);
         }
 
-        .stat-box .label { font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px; }
-        .stat-box .val { font-size: 1.2rem; font-weight: 600; }
+        .stat-pill .label { font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px; }
+        .stat-pill .value { font-size: 1.1rem; font-weight: 700; }
 
-        .growth-badge {
+        .growth-indicator {
             display: inline-block;
-            margin-top: 12px;
-            padding: 6px 14px;
-            border-radius: 40px;
-            font-size: 0.75rem;
-            font-weight: 600;
+            margin: 10px 0;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 700;
         }
-        .growth-up { background: #1a2e1a; color: #4ade80; }
-        .growth-wait { background: #1a1a2e; color: #60a5fa; }
+        .up { background: #1a2e1a; color: #4ade80; }
+        .neutral { background: #1a1a2e; color: #60a5fa; }
 
-        @media (min-width: 768px) {
-            .feed-container {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        @media (max-width: 600px) {
+            .feed-grid { grid-template-columns: 1fr; padding: 12px; }
+            .stat-grid-detail { grid-template-columns: 1fr; }
         }
-
-        /* Кастомный скроллбар */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: var(--bg-main); }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     </style>
 </head>
 <body>
 
-<div class="channel-header">
-    <img src="" id="chAvatar" class="channel-avatar" alt="">
-    <div class="channel-info">
-        <h2 id="chName">Загрузка...</h2>
-        <p id="chMeta">@xraygame</p>
+<header class="app-header">
+    <img src="https://yt3.googleusercontent.com/B1IMRSl53O2y-wYM6ZgrOJTextnb0UksTOC40PhD_eNDi0tuZHa7Xs8-Kfd0T-tmfv-oJ5rV=s160-c-k-c0x00ffffff-no-rj" id="chAvatar" class="channel-pfp" alt="">
+    <div class="header-info">
+        <h1 id="chName">Lob Analytics</h1>
+        <p id="chMeta">Подключение к каналу...</p>
     </div>
-</div>
+</header>
 
-<div class="feed-container" id="videoFeed">
-    </div>
+<main class="feed-grid" id="videoFeed">
+    </main>
 
-<div class="modal" id="statsModal">
-    <div class="modal-header">
-        <span style="font-weight: 600;">Аналитика видео</span>
-        <button class="close-btn" onclick="closeModal()">Закрыть</button>
+<div class="modal" id="detailModal">
+    <div class="modal-nav">
+        <span style="font-weight: 700; font-size: 0.9rem;">Детальная статистика</span>
+        <button class="close-modal" onclick="closeDetails()">Закрыть</button>
     </div>
     <div class="modal-body">
-        <div id="modalThumb" class="thumb-wrapper" style="border-radius: 20px; margin-bottom: 16px;"></div>
-        <h2 id="modalTitle" style="font-size: 1.2rem; margin-bottom: 8px;"></h2>
+        <div id="detailThumb" style="width:100%; border-radius:20px; overflow:hidden; margin-bottom:20px;"></div>
+        <h2 id="detailTitle" style="font-size: 1.3rem; line-height: 1.3; margin-bottom: 10px;"></h2>
         
-        <div id="modalGrowth"></div>
+        <div id="detailGrowth"></div>
 
-        <div class="chart-card">
-            <canvas id="detailChart"></canvas>
+        <div class="detail-chart-box">
+            <canvas id="mainChart"></canvas>
         </div>
 
-        <div class="stats-grid" id="modalStatsGrid">
-            </div>
+        <div class="stat-grid-detail" id="detailGrid"></div>
 
-        <a href="" id="modalYTLink" target="_blank" style="display: block; text-align: center; margin-top: 24px; color: var(--text-secondary); text-decoration: none; font-size: 0.8rem; background: var(--border); padding: 12px; border-radius: 16px;">Открыть в приложении YouTube</a>
+        <a id="ytLink" href="" target="_blank" style="display: block; text-align: center; margin-top: 30px; color: #666; text-decoration: none; font-size: 0.8rem; transition: color 0.3s ease;">Смотреть на YouTube оригинал</a>
     </div>
 </div>
 
@@ -255,78 +277,107 @@
     const HANDLE = 'xraygame';
     
     let allVideos = [];
-    let analytics = JSON.parse(localStorage.getItem('lob_analytics_v3') || '{}');
-    let currentChart = null;
+    let analyticsData = JSON.parse(localStorage.getItem('lob_analytics_v3') || '{}');
+    let activeChart = null;
 
-    async function init() {
+    // Функция для расчета месяцев и дней
+    function timeAgo(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffTime = Math.abs(now - date);
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 0) return "Сегодня";
+        
+        const months = Math.floor(diffDays / 30);
+        const days = diffDays % 30;
+        
+        // Склонение слов
+        function getPlural(number, words) {
+            return words[(number % 100 > 4 && number % 100 < 20) ? 2 : [2, 0, 1, 1, 1, 2][(number % 10 < 5) ? Math.abs(number) % 10 : 5]];
+        }
+
+        let res = [];
+        if (months > 0) res.push(`${months} ${getPlural(months, ['месяц', 'месяца', 'месяцев'])}`);
+        if (days > 0) res.push(`${days} ${getPlural(days, ['день', 'дня', 'дней'])}`);
+        
+        return res.join(' и ') + ' назад';
+    }
+
+    async function loadApp() {
         try {
-            // 1. Инфо канала
-            const chRes = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&forHandle=${HANDLE}&key=${API_KEY}`);
-            const chData = await chRes.json();
-            const channel = chData.items[0];
+            // 1. Получаем данные канала
+            const channelRes = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&forHandle=${HANDLE}&key=${API_KEY}`);
+            const channelData = await channelRes.json();
+            const channel = channelData.items[0];
             
             document.getElementById('chName').innerText = channel.snippet.title;
-            document.getElementById('chAvatar').src = channel.snippet.thumbnails.default.url;
-            document.getElementById('chMeta').innerText = `@${HANDLE} • ${parseInt(channel.statistics.subscriberCount).toLocaleString()} сабов`;
+            // Изменили "сабов" на "подписчиков"
+            document.getElementById('chMeta').innerText = `@${HANDLE} • ${parseInt(channel.statistics.subscriberCount).toLocaleString('ru-RU')} подписчиков`;
 
-            // 2. Список видео
+            // 2. Получаем видео
             const uploadId = channel.contentDetails.relatedPlaylists.uploads;
-            const vRes = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadId}&maxResults=40&key=${API_KEY}`);
-            const vData = await vRes.json();
+            const videoListRes = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadId}&maxResults=48&key=${API_KEY}`);
+            const videoListData = await videoListRes.json();
             
-            const videoIds = vData.items.map(i => i.snippet.resourceId.videoId);
-            const sRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoIds.join(',')}&key=${API_KEY}`);
-            const sData = await sRes.json();
+            const ids = videoListData.items.map(i => i.snippet.resourceId.videoId);
+            const statsRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${ids.join(',')}&key=${API_KEY}`);
+            const statsData = await statsRes.json();
 
             const statsMap = {};
-            sData.items.forEach(i => statsMap[i.id] = i.statistics);
+            statsData.items.forEach(i => statsMap[i.id] = i.statistics);
 
-            allVideos = vData.items.map(item => {
+            allVideos = videoListData.items.map(item => {
                 const id = item.snippet.resourceId.videoId;
-                const vStats = statsMap[id];
+                const vStats = statsMap[id] || {};
+                const thumbs = item.snippet.thumbnails;
+                
+                // Исправлен баг с превью: ищем максимальное доступное качество
+                const bestThumb = thumbs?.maxres?.url || thumbs?.standard?.url || thumbs?.high?.url || thumbs?.medium?.url || thumbs?.default?.url || '';
+
                 const videoObj = {
                     id: id,
                     title: item.snippet.title,
-                    thumb: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url,
+                    thumb: bestThumb,
                     views: parseInt(vStats.viewCount || 0),
                     likes: parseInt(vStats.likeCount || 0),
                     comments: parseInt(vStats.commentCount || 0),
-                    published: item.snippet.publishedAt
+                    date: item.snippet.publishedAt
                 };
-                updateLocalHistory(id, videoObj.views);
+                track(id, videoObj.views);
                 return videoObj;
             });
 
             renderFeed();
         } catch (e) {
             console.error(e);
-            document.getElementById('videoFeed').innerHTML = "Ошибка доступа. Проверь API ключ.";
+            document.getElementById('chMeta').innerText = "Ошибка загрузки API";
         }
     }
 
-    function updateLocalHistory(id, views) {
+    function track(id, views) {
         const now = Date.now();
-        if (!analytics[id]) analytics[id] = { history: [] };
-        const last = analytics[id].history[0];
-        if (!last || last.views !== views) {
-            analytics[id].history.unshift({ views, timestamp: now });
-            if (analytics[id].history.length > 50) analytics[id].history.pop();
-            localStorage.setItem('lob_analytics_v3', JSON.stringify(analytics));
+        if (!analyticsData[id]) analyticsData[id] = { history: [] };
+        const history = analyticsData[id].history;
+        if (!history[0] || history[0].views !== views) {
+            history.unshift({ views, timestamp: now });
+            if (history.length > 60) history.pop();
+            localStorage.setItem('lob_analytics_v3', JSON.stringify(analyticsData));
         }
     }
 
     function renderFeed() {
-        const container = document.getElementById('videoFeed');
-        container.innerHTML = allVideos.map(v => `
-            <div class="video-item" onclick="openDetails('${v.id}')">
-                <div class="thumb-wrapper">
+        const feed = document.getElementById('videoFeed');
+        feed.innerHTML = allVideos.map(v => `
+            <div class="video-card" onclick="openDetails('${v.id}')">
+                <div class="thumb-box">
                     <img src="${v.thumb}" loading="lazy">
                 </div>
-                <div class="video-content">
+                <div class="card-content">
                     <div class="video-title">${v.title}</div>
-                    <div class="quick-stats">
-                        <span>👁 ${v.views.toLocaleString()}</span>
-                        <span>👍 ${v.likes.toLocaleString()}</span>
+                    <div class="card-stats">
+                        <span>👁 ${v.views.toLocaleString('ru-RU')}</span>
+                        <span>👍 ${v.likes.toLocaleString('ru-RU')}</span>
                     </div>
                 </div>
             </div>
@@ -335,78 +386,76 @@
 
     function openDetails(id) {
         const v = allVideos.find(x => x.id === id);
-        const modal = document.getElementById('statsModal');
-        const history = analytics[id]?.history || [];
+        const history = analyticsData[id]?.history || [];
         
-        document.getElementById('modalTitle').innerText = v.title;
-        document.getElementById('modalThumb').innerHTML = `<img src="${v.thumb}" style="width:100%; border-radius:20px;">`;
-        document.getElementById('modalYTLink').href = `https://youtu.be/${id}`;
+        document.getElementById('detailTitle').innerText = v.title;
+        document.getElementById('detailThumb').innerHTML = `<img src="${v.thumb}" style="width:100%; display:block;">`;
+        document.getElementById('ytLink').href = `https://youtu.be/${id}`;
         
-        // Рост
-        const growthDiv = document.getElementById('modalGrowth');
+        const growthBox = document.getElementById('detailGrowth');
         if (history.length > 1) {
             const last = history[0];
             const prev = history[1];
             const diff = last.views - prev.views;
-            const hours = (last.timestamp - prev.timestamp) / 3600000;
-            const perHour = Math.round(diff / (hours || 1));
-            growthDiv.innerHTML = `<div class="growth-badge growth-up">📈 +${perHour} просм. / час</div>`;
+            const hrs = (last.timestamp - prev.timestamp) / 3600000;
+            const rate = Math.round(diff / (hrs || 1));
+            growthBox.innerHTML = `<div class="growth-indicator up">🔥 +${rate} просм / час</div>`;
         } else {
-            growthDiv.innerHTML = `<div class="growth-badge growth-wait">⏳ собираем данные...</div>`;
+            growthBox.innerHTML = `<div class="growth-indicator neutral">⏳ Накопление данных...</div>`;
         }
 
-        // Статы
-        document.getElementById('modalStatsGrid').innerHTML = `
-            <div class="stat-box"><div class="label">Просмотры</div><div class="val">${v.views.toLocaleString()}</div></div>
-            <div class="stat-box"><div class="label">Лайки</div><div class="val">${v.likes.toLocaleString()}</div></div>
-            <div class="stat-box"><div class="label">Комменты</div><div class="val">${v.comments.toLocaleString()}</div></div>
-            <div class="stat-box"><div class="label">Дней в эфире</div><div class="val">${Math.floor((Date.now() - new Date(v.published))/86400000)}</div></div>
+        // Заменили просто дату на человекопонятный формат
+        const publishedText = timeAgo(v.date);
+
+        document.getElementById('detailGrid').innerHTML = `
+            <div class="stat-pill"><div class="label">Всего просмотров</div><div class="value">${v.views.toLocaleString('ru-RU')}</div></div>
+            <div class="stat-pill"><div class="label">Лайки</div><div class="value">${v.likes.toLocaleString('ru-RU')}</div></div>
+            <div class="stat-pill"><div class="label">Комментарии</div><div class="value">${v.comments.toLocaleString('ru-RU')}</div></div>
+            <div class="stat-pill"><div class="label">Опубликовано</div><div class="value" style="font-size: 0.95rem;">${publishedText}</div></div>
         `;
 
-        modal.classList.add('active');
+        document.getElementById('detailModal').classList.add('active');
         document.body.style.overflow = 'hidden';
 
-        // График
-        setTimeout(() => renderChart(history), 100);
+        setTimeout(() => buildChart(history), 100);
     }
 
-    function renderChart(history) {
-        const ctx = document.getElementById('detailChart').getContext('2d');
-        if (currentChart) currentChart.destroy();
+    function buildChart(history) {
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        if (activeChart) activeChart.destroy();
 
-        const data = [...history].reverse();
-        currentChart = new Chart(ctx, {
+        const cleanData = [...history].reverse();
+        activeChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: data.map(i => new Date(i.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})),
+                labels: cleanData.map(h => new Date(h.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})),
                 datasets: [{
-                    label: 'Просмотры',
-                    data: data.map(i => i.views),
+                    data: cleanData.map(h => h.views),
                     borderColor: '#fff',
-                    borderWidth: 2,
+                    borderWidth: 3,
                     tension: 0.4,
                     pointRadius: 0,
                     fill: true,
-                    backgroundColor: 'rgba(255,255,255,0.05)'
+                    backgroundColor: 'rgba(255,255,255,0.03)'
                 }]
             },
             options: {
                 responsive: true,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { ticks: { color: '#555', maxRotation: 0 }, grid: { display: false } },
-                    y: { ticks: { color: '#555' }, grid: { color: '#1a1a1a' } }
+                    x: { ticks: { color: '#444', maxRotation: 0 }, grid: { display: false } },
+                    y: { ticks: { color: '#444' }, grid: { color: '#111' } }
                 }
             }
         });
     }
 
-    function closeModal() {
-        document.getElementById('statsModal').classList.remove('active');
+    function closeDetails() {
+        document.getElementById('detailModal').classList.remove('active');
         document.body.style.overflow = 'auto';
     }
 
-    init();
+    loadApp();
 </script>
 
 </body>
