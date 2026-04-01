@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>Lob Analytics</title>
-    <!-- Chart.js для графиков -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
@@ -21,7 +20,6 @@
             color: #e0e0e0;
         }
 
-        /* контейнер */
         .app {
             max-width: 560px;
             margin: 0 auto;
@@ -29,11 +27,9 @@
             border-radius: 32px;
             overflow: hidden;
             box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-            backdrop-filter: blur(0px);
             transition: all 0.2s ease;
         }
 
-        /* шапка */
         .header {
             padding: 20px 20px 12px 20px;
             border-bottom: 1px solid #2a2a2a;
@@ -53,7 +49,6 @@
             margin-top: 6px;
         }
 
-        /* вкладки */
         .tabs {
             display: flex;
             padding: 12px 20px 0 20px;
@@ -74,7 +69,6 @@
             border-bottom-color: #ffffff;
         }
 
-        /* контент вкладок */
         .tab-content {
             display: none;
             padding: 20px;
@@ -83,16 +77,20 @@
         .tab-content.active {
             display: block;
         }
-
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(6px);}
             to   { opacity: 1; transform: translateY(0);}
         }
 
-        /* карточка видео */
-        .video-preview {
-            margin-bottom: 24px;
+        /* карточка видео с анимацией */
+        .video-card {
+            transition: opacity 0.2s ease, transform 0.2s ease;
         }
+        .video-card.fade-out {
+            opacity: 0;
+            transform: translateX(8px);
+        }
+
         .thumbnail {
             width: 100%;
             border-radius: 20px;
@@ -147,9 +145,8 @@
         .growth-badge.hot { background: #2c1a0c; color: #e67e22; }
         .growth-badge.normal { background: #1a2a1a; color: #6fbf6f; }
         .growth-badge.slow { background: #222; color: #aaa; }
-        .growth-badge.new { background: #0a2a3a; color: #5dade2; }
+        .growth-badge.wait { background: #0a2a3a; color: #5dade2; }
 
-        /* навигация */
         .nav-buttons {
             display: flex;
             gap: 12px;
@@ -193,6 +190,52 @@
             margin-top: 16px;
         }
 
+        /* фильтры и кнопка обновления по центру */
+        .filter-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 16px 0;
+        }
+        .filter-chip {
+            background: #222;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.1s;
+            text-align: center;
+        }
+        .filter-chip.active {
+            background: #3a3a3a;
+            color: white;
+        }
+        .center-btn {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0 12px;
+        }
+        .center-btn button {
+            max-width: 220px;
+        }
+
+        /* ссылка на YouTube */
+        .youtube-link {
+            display: inline-block;
+            background: #222;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            color: #aaa;
+            text-decoration: none;
+            margin-top: 12px;
+            transition: 0.1s;
+        }
+        .youtube-link:active {
+            background: #3a3a3a;
+        }
+
         /* график */
         .chart-container {
             background: #0f0f0f;
@@ -205,27 +248,6 @@
             width: 100%;
         }
 
-        /* фильтры */
-        .filter-group {
-            display: flex;
-            gap: 10px;
-            margin: 16px 0;
-            flex-wrap: wrap;
-        }
-        .filter-chip {
-            background: #222;
-            padding: 6px 14px;
-            border-radius: 40px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: 0.1s;
-        }
-        .filter-chip.active {
-            background: #3a3a3a;
-            color: white;
-        }
-
-        /* футер */
         .footer {
             text-align: right;
             padding: 12px 20px 20px;
@@ -233,12 +255,7 @@
             color: #4a4a4a;
             border-top: 1px solid #2a2a2a;
         }
-        a {
-            color: #8a8a8a;
-            text-decoration: none;
-        }
 
-        /* адаптив */
         @media (max-width: 480px) {
             body {
                 padding: 8px;
@@ -248,6 +265,10 @@
             }
             .video-title {
                 font-size: 1rem;
+            }
+            .filter-chip {
+                padding: 6px 12px;
+                font-size: 0.75rem;
             }
         }
     </style>
@@ -266,17 +287,19 @@
     </div>
 
     <div id="statsTab" class="tab-content active">
-        <div id="videoCard"></div>
+        <div id="videoCardContainer"></div>
         <div class="nav-buttons">
             <button id="prevBtn" class="secondary-btn">◀ Назад</button>
             <button id="nextBtn" class="secondary-btn">Вперёд ▶</button>
         </div>
-        <div class="filter-group" id="sortGroup">
+        <div class="filter-group">
             <div class="filter-chip active" data-sort="original">Исходный</div>
             <div class="filter-chip" data-sort="views">По просмотрам</div>
             <div class="filter-chip" data-sort="growth">По росту (час)</div>
         </div>
-        <button id="refreshBtn" class="primary-btn">⟳ Обновить данные</button>
+        <div class="center-btn">
+            <button id="refreshBtn" class="primary-btn">⟳ Обновить данные</button>
+        </div>
         <div class="counter" id="videoCounter"></div>
         <div class="last-update" id="lastUpdateTime"></div>
     </div>
@@ -287,7 +310,9 @@
             <canvas id="viewsChart" width="400" height="200"></canvas>
         </div>
         <div class="stats-grid" id="chartStats"></div>
-        <button id="refreshChartBtn" class="primary-btn" style="margin-top: 12px;">⟳ Обновить график</button>
+        <div class="center-btn">
+            <button id="refreshChartBtn" class="primary-btn">⟳ Обновить график</button>
+        </div>
     </div>
 
     <div id="insightsTab" class="tab-content">
@@ -295,7 +320,7 @@
     </div>
 
     <div class="footer">
-        <span>lobedron</span> &nbsp;|&nbsp; <span id="version">v2.0</span>
+        <span>lobedron</span> &nbsp;|&nbsp; <span id="version">v2.1</span>
     </div>
 </div>
 
@@ -317,12 +342,13 @@
         "https://www.youtube.com/watch?v=w7sYCnbAufY"
     ];
 
-    let allVideos = [];      // исходный порядок (свежие данные)
-    let currentList = [];    // текущий список для отображения
+    let allVideos = [];
+    let currentList = [];
     let currentIndex = 0;
     let lastUpdateTime = null;
-    let analytics = {};      // хранилище истории просмотров
+    let analytics = {};
     let viewsChart = null;
+    let isAnimating = false;
 
     // ---------- Вспомогательные ----------
     function extractVideoId(url) {
@@ -340,7 +366,7 @@
         return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
     }
 
-    // ---------- Аналитика (localStorage) ----------
+    // ---------- Аналитика ----------
     function loadAnalytics() {
         const saved = localStorage.getItem('lob_analytics');
         if (saved) analytics = JSON.parse(saved);
@@ -352,18 +378,11 @@
 
     function updateAnalytics(videoId, currentViews) {
         const now = Date.now();
-        if (!analytics[videoId]) {
-            analytics[videoId] = { history: [] };
-        }
+        if (!analytics[videoId]) analytics[videoId] = { history: [] };
         const prev = analytics[videoId];
         const lastEntry = prev.history[0];
-        // если прошло больше 30 минут или просмотры изменились — добавляем запись
         if (!lastEntry || (now - lastEntry.timestamp > 30 * 60 * 1000) || lastEntry.views !== currentViews) {
-            prev.history.unshift({
-                views: currentViews,
-                timestamp: now
-            });
-            // оставляем не больше 50 записей
+            prev.history.unshift({ views: currentViews, timestamp: now });
             if (prev.history.length > 50) prev.history.pop();
         }
         saveAnalytics();
@@ -407,7 +426,6 @@
     async function refreshData() {
         try {
             const fresh = await fetchAllVideos();
-            // сохраняем порядок из VIDEO_URLS
             const ordered = [];
             for (let url of VIDEO_URLS) {
                 const id = extractVideoId(url);
@@ -415,31 +433,28 @@
                 if (found) ordered.push(found);
             }
             allVideos = ordered;
-            if (currentList.length === 0) currentList = [...allVideos];
-            else {
-                // сохраняем сортировку (оригинал или по просмотрам)
-                const currentSort = document.querySelector('.filter-chip.active')?.dataset.sort || 'original';
-                if (currentSort === 'views') currentList = [...allVideos].sort((a,b) => b.views - a.views);
-                else if (currentSort === 'growth') {
-                    currentList = [...allVideos].sort((a,b) => {
-                        const gA = getGrowthRate(a.id, a.views)?.perHour || 0;
-                        const gB = getGrowthRate(b.id, b.views)?.perHour || 0;
-                        return gB - gA;
-                    });
-                } else currentList = [...allVideos];
-            }
+            const currentSort = document.querySelector('.filter-chip.active')?.dataset.sort || 'original';
+            if (currentSort === 'views') currentList = [...allVideos].sort((a,b) => b.views - a.views);
+            else if (currentSort === 'growth') {
+                currentList = [...allVideos].sort((a,b) => {
+                    const gA = getGrowthRate(a.id, a.views)?.perHour || 0;
+                    const gB = getGrowthRate(b.id, b.views)?.perHour || 0;
+                    return gB - gA;
+                });
+            } else currentList = [...allVideos];
             if (currentIndex >= currentList.length) currentIndex = 0;
             renderCurrentTab();
         } catch(e) {
             console.error(e);
-            document.getElementById('videoCard').innerHTML = `<div style="color:#ff8a8a">❌ Ошибка загрузки: ${e.message}</div>`;
+            document.getElementById('videoCardContainer').innerHTML = `<div style="color:#ff8a8a">❌ Ошибка загрузки: ${e.message}</div>`;
         }
     }
 
-    // ---------- Отрисовка основной вкладки ----------
-    function renderStatsTab() {
+    // ---------- Отрисовка статистики с анимацией ----------
+    function renderStatsTab(animate = true) {
         const video = currentList[currentIndex];
         if (!video) return;
+
         const growth = getGrowthRate(video.id, video.views);
         let growthHtml = '';
         if (growth) {
@@ -449,10 +464,11 @@
             else if (growth.perHour >= 20) { cls = 'normal'; text = `📈 ${growth.perHour} просм/час`; }
             growthHtml = `<div class="growth-badge ${cls}">${text}</div>`;
         } else {
-            growthHtml = `<div class="growth-badge new">🆕 первый замер</div>`;
+            growthHtml = `<div class="growth-badge wait">⏳ накопление данных…</div>`;
         }
-        const html = `
-            <div class="video-preview">
+
+        const newCardHtml = `
+            <div class="video-card" id="videoCard">
                 <img class="thumbnail" src="${video.thumb}" alt="preview" loading="lazy">
                 <div class="video-title">${escapeHtml(video.title)}</div>
                 <div class="stats-grid">
@@ -461,15 +477,34 @@
                     <div class="stat-item"><div class="stat-label">КОММЕНТАРИИ</div><div class="stat-number">${formatNumber(video.comments)}</div></div>
                 </div>
                 ${growthHtml}
-                <div style="margin-top: 12px;"><a href="${video.url}" target="_blank" style="color:#8a8a8a; font-size:0.75rem;">🔗 Смотреть на YouTube</a></div>
+                <a href="${video.url}" target="_blank" class="youtube-link">🔗 Смотреть на YouTube</a>
             </div>
         `;
-        document.getElementById('videoCard').innerHTML = html;
+
+        const container = document.getElementById('videoCardContainer');
+        if (!animate) {
+            container.innerHTML = newCardHtml;
+            document.getElementById('videoCounter').innerHTML = `${currentIndex+1} / ${currentList.length}`;
+            document.getElementById('lastUpdateTime').innerHTML = `🕒 обновлено: ${formatTime(lastUpdateTime)}`;
+            return;
+        }
+
+        // Анимация
+        const oldCard = document.querySelector('#videoCard');
+        if (oldCard) {
+            oldCard.classList.add('fade-out');
+            setTimeout(() => {
+                if (container.firstChild === oldCard) {
+                    container.innerHTML = newCardHtml;
+                }
+                const newCardElem = document.querySelector('#videoCard');
+                if (newCardElem) newCardElem.classList.remove('fade-out');
+            }, 200);
+        } else {
+            container.innerHTML = newCardHtml;
+        }
         document.getElementById('videoCounter').innerHTML = `${currentIndex+1} / ${currentList.length}`;
         document.getElementById('lastUpdateTime').innerHTML = `🕒 обновлено: ${formatTime(lastUpdateTime)}`;
-        // кнопки навигации
-        document.getElementById('prevBtn').onclick = () => { if (currentIndex > 0) { currentIndex--; renderStatsTab(); } };
-        document.getElementById('nextBtn').onclick = () => { if (currentIndex < currentList.length-1) { currentIndex++; renderStatsTab(); } };
     }
 
     // ---------- График ----------
@@ -478,7 +513,7 @@
         if (!video) return;
         document.getElementById('chartVideoTitle').innerText = video.title;
         const history = analytics[video.id]?.history || [];
-        const points = history.slice().reverse(); // от старых к новым
+        const points = history.slice().reverse();
         const labels = points.map(p => formatTime(p.timestamp));
         const data = points.map(p => p.views);
         const ctx = document.getElementById('viewsChart').getContext('2d');
@@ -512,10 +547,9 @@
             <div class="stat-item"><div class="stat-label">ЗА ВЕСЬ ПЕРИОД</div><div class="stat-number">${formatNumber(totalGain)}</div></div>
             <div class="stat-item"><div class="stat-label">ТЕКУЩИЕ</div><div class="stat-number">${formatNumber(lastViews)}</div></div>
         `;
-        document.getElementById('refreshChartBtn').onclick = () => refreshData().then(() => renderChartTab());
     }
 
-    // ---------- Аналитика (список видео с ростом) ----------
+    // ---------- Аналитика (рейтинг) ----------
     function renderInsightsTab() {
         const sorted = [...allVideos].sort((a,b) => {
             const gA = getGrowthRate(a.id, a.views)?.perHour || 0;
@@ -540,7 +574,7 @@
 
     function renderCurrentTab() {
         const activeTab = document.querySelector('.tab.active').dataset.tab;
-        if (activeTab === 'stats') renderStatsTab();
+        if (activeTab === 'stats') renderStatsTab(true);
         else if (activeTab === 'chart') renderChartTab();
         else if (activeTab === 'insights') renderInsightsTab();
     }
@@ -558,11 +592,24 @@
         renderCurrentTab();
     }
 
+    // ---------- Навигация с анимацией ----------
+    function changeVideo(delta) {
+        if (isAnimating) return;
+        isAnimating = true;
+        const newIndex = currentIndex + delta;
+        if (newIndex >= 0 && newIndex < currentList.length) {
+            currentIndex = newIndex;
+            renderStatsTab(true);
+            setTimeout(() => { isAnimating = false; }, 250);
+        } else {
+            isAnimating = false;
+        }
+    }
+
     // ---------- Инициализация ----------
     function init() {
         loadAnalytics();
         refreshData().then(() => {
-            // обработчики вкладок
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', () => {
                     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -572,7 +619,6 @@
                     renderCurrentTab();
                 });
             });
-            // сортировка
             document.querySelectorAll('.filter-chip').forEach(chip => {
                 chip.addEventListener('click', () => {
                     document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
@@ -580,7 +626,10 @@
                     setSort(chip.dataset.sort);
                 });
             });
+            document.getElementById('prevBtn').onclick = () => changeVideo(-1);
+            document.getElementById('nextBtn').onclick = () => changeVideo(1);
             document.getElementById('refreshBtn').onclick = () => refreshData().then(() => renderCurrentTab());
+            document.getElementById('refreshChartBtn').onclick = () => refreshData().then(() => renderChartTab());
         });
     }
 
