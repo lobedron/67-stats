@@ -29,6 +29,48 @@
             box-shadow: 0 8px 24px rgba(0,0,0,0.4);
         }
 
+        /* Блок канала */
+        .channel-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background: #0f0f0f;
+            border-bottom: 1px solid #2a2a2a;
+        }
+        .channel-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #2a2a2a;
+        }
+        .channel-info {
+            flex: 1;
+        }
+        .channel-name {
+            font-weight: 600;
+            font-size: 1rem;
+            color: #fff;
+            text-decoration: none;
+        }
+        .channel-handle {
+            font-size: 0.7rem;
+            color: #8a8a8a;
+        }
+        .channel-link {
+            background: #2a2a2a;
+            padding: 6px 12px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            color: #ccc;
+            text-decoration: none;
+            transition: 0.1s;
+        }
+        .channel-link:active {
+            background: #3a3a3a;
+        }
+
         .header {
             padding: 20px 20px 12px 20px;
             border-bottom: 1px solid #2a2a2a;
@@ -81,7 +123,6 @@
             to   { opacity: 1; transform: translateY(0);}
         }
 
-        /* карточка видео */
         .video-card {
             transition: opacity 0.2s ease, transform 0.2s ease;
         }
@@ -101,8 +142,6 @@
             aspect-ratio: 16/9;
             object-fit: cover;
         }
-        
-        /* ФИКСИРОВАННАЯ ВЫСОТА ДЛЯ НАЗВАНИЯ — больше не прыгает */
         .video-title {
             font-size: 1rem;
             font-weight: 500;
@@ -116,7 +155,6 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        
         .stats-grid {
             background: #0f0f0f;
             border-radius: 24px;
@@ -269,11 +307,23 @@
             .stat-number { font-size: 1.2rem; }
             .video-title { font-size: 0.95rem; min-height: 2.5rem; }
             .filter-chip { padding: 6px 12px; font-size: 0.75rem; }
+            .channel-avatar { width: 40px; height: 40px; }
+            .channel-name { font-size: 0.9rem; }
         }
     </style>
 </head>
 <body>
 <div class="app">
+    <!-- Блок канала -->
+    <div class="channel-card">
+        <img class="channel-avatar" src="https://yt3.googleusercontent.com/ytc/AIdro_l8X7h4v5k2p9Q3x6y8z1a2b3c4d5e6f7g8h9i0j1=w48-h48-c-k-c0x00ffffff-no-rj" alt="avatar" onerror="this.src='https://via.placeholder.com/48?text=?'">
+        <div class="channel-info">
+            <a href="https://www.youtube.com/@xraygame" target="_blank" class="channel-name">XRAYGAME</a>
+            <div class="channel-handle">@xraygame • 5190 подписчиков</div>
+        </div>
+        <a href="https://www.youtube.com/@xraygame/videos" target="_blank" class="channel-link">📺 Все видео</a>
+    </div>
+
     <div class="header">
         <h1>Lob Analytics</h1>
         <p>мониторинг просмотров и динамики</p>
@@ -319,7 +369,7 @@
     </div>
 
     <div class="footer">
-        <span>lobedron</span> &nbsp;|&nbsp; <span id="version">v2.3</span>
+        <span>lobedron</span> &nbsp;|&nbsp; <span id="version">v2.4</span>
     </div>
 </div>
 
