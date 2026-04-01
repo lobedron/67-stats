@@ -27,7 +27,6 @@
             border-radius: 32px;
             overflow: hidden;
             box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-            transition: all 0.2s ease;
         }
 
         .header {
@@ -90,6 +89,10 @@
             opacity: 0;
             transform: translateX(8px);
         }
+        .video-card.fade-in {
+            opacity: 1;
+            transform: translateX(0);
+        }
 
         .thumbnail {
             width: 100%;
@@ -97,7 +100,6 @@
             background: #2a2a2a;
             aspect-ratio: 16/9;
             object-fit: cover;
-            transition: 0.2s;
         }
         .video-title {
             font-size: 1.1rem;
@@ -190,7 +192,6 @@
             margin-top: 16px;
         }
 
-        /* фильтры и кнопка обновления по центру */
         .filter-group {
             display: flex;
             gap: 12px;
@@ -220,7 +221,6 @@
             max-width: 220px;
         }
 
-        /* ссылка на YouTube */
         .youtube-link {
             display: inline-block;
             background: #222;
@@ -236,7 +236,6 @@
             background: #3a3a3a;
         }
 
-        /* график */
         .chart-container {
             background: #0f0f0f;
             border-radius: 24px;
@@ -257,19 +256,10 @@
         }
 
         @media (max-width: 480px) {
-            body {
-                padding: 8px;
-            }
-            .stat-number {
-                font-size: 1.2rem;
-            }
-            .video-title {
-                font-size: 1rem;
-            }
-            .filter-chip {
-                padding: 6px 12px;
-                font-size: 0.75rem;
-            }
+            body { padding: 8px; }
+            .stat-number { font-size: 1.2rem; }
+            .video-title { font-size: 1rem; }
+            .filter-chip { padding: 6px 12px; font-size: 0.75rem; }
         }
     </style>
 </head>
@@ -320,7 +310,7 @@
     </div>
 
     <div class="footer">
-        <span>lobedron</span> &nbsp;|&nbsp; <span id="version">v2.1</span>
+        <span>lobedron</span> &nbsp;|&nbsp; <span id="version">v2.2</span>
     </div>
 </div>
 
@@ -348,7 +338,7 @@
     let lastUpdateTime = null;
     let analytics = {};
     let viewsChart = null;
-    let isAnimating = false;
+    let animationInProgress = false;
 
     // ---------- Вспомогательные ----------
     function extractVideoId(url) {
@@ -450,11 +440,8 @@
         }
     }
 
-    // ---------- Отрисовка статистики с анимацией ----------
-    function renderStatsTab(animate = true) {
-        const video = currentList[currentIndex];
-        if (!video) return;
-
+    // ---------- Построение HTML карточки ----------
+    function buildVideoCardHTML(video) {
         const growth = getGrowthRate(video.id, video.views);
         let growthHtml = '';
         if (growth) {
@@ -467,7 +454,7 @@
             growthHtml = `<div class="growth-badge wait">⏳ накопление данных…</div>`;
         }
 
-        const newCardHtml = `
+        return `
             <div class="video-card" id="videoCard">
                 <img class="thumbnail" src="${video.thumb}" alt="preview" loading="lazy">
                 <div class="video-title">${escapeHtml(video.title)}</div>
@@ -480,31 +467,50 @@
                 <a href="${video.url}" target="_blank" class="youtube-link">🔗 Смотреть на YouTube</a>
             </div>
         `;
+    }
+
+    // ---------- Отрисовка статистики с анимацией ----------
+    function renderStatsTab(animate = true) {
+        if (currentList.length === 0) return;
+        const video = currentList[currentIndex];
+        if (!video) return;
 
         const container = document.getElementById('videoCardContainer');
+        const newHtml = buildVideoCardHTML(video);
+
         if (!animate) {
-            container.innerHTML = newCardHtml;
+            container.innerHTML = newHtml;
             document.getElementById('videoCounter').innerHTML = `${currentIndex+1} / ${currentList.length}`;
             document.getElementById('lastUpdateTime').innerHTML = `🕒 обновлено: ${formatTime(lastUpdateTime)}`;
             return;
         }
 
-        // Анимация
+        // Если анимация уже идёт, не запускаем новую
+        if (animationInProgress) return;
         const oldCard = document.querySelector('#videoCard');
-        if (oldCard) {
-            oldCard.classList.add('fade-out');
-            setTimeout(() => {
-                if (container.firstChild === oldCard) {
-                    container.innerHTML = newCardHtml;
-                }
-                const newCardElem = document.querySelector('#videoCard');
-                if (newCardElem) newCardElem.classList.remove('fade-out');
-            }, 200);
-        } else {
-            container.innerHTML = newCardHtml;
+        if (!oldCard) {
+            container.innerHTML = newHtml;
+            document.getElementById('videoCounter').innerHTML = `${currentIndex+1} / ${currentList.length}`;
+            document.getElementById('lastUpdateTime').innerHTML = `🕒 обновлено: ${formatTime(lastUpdateTime)}`;
+            return;
         }
-        document.getElementById('videoCounter').innerHTML = `${currentIndex+1} / ${currentList.length}`;
-        document.getElementById('lastUpdateTime').innerHTML = `🕒 обновлено: ${formatTime(lastUpdateTime)}`;
+
+        animationInProgress = true;
+        oldCard.classList.add('fade-out');
+        setTimeout(() => {
+            container.innerHTML = newHtml;
+            document.getElementById('videoCounter').innerHTML = `${currentIndex+1} / ${currentList.length}`;
+            document.getElementById('lastUpdateTime').innerHTML = `🕒 обновлено: ${formatTime(lastUpdateTime)}`;
+            // Добавляем плавное появление
+            const newCard = document.querySelector('#videoCard');
+            if (newCard) {
+                newCard.classList.add('fade-in');
+                setTimeout(() => {
+                    if (newCard) newCard.classList.remove('fade-in');
+                }, 200);
+            }
+            animationInProgress = false;
+        }, 200);
     }
 
     // ---------- График ----------
@@ -594,15 +600,11 @@
 
     // ---------- Навигация с анимацией ----------
     function changeVideo(delta) {
-        if (isAnimating) return;
-        isAnimating = true;
+        if (animationInProgress) return;
         const newIndex = currentIndex + delta;
         if (newIndex >= 0 && newIndex < currentList.length) {
             currentIndex = newIndex;
             renderStatsTab(true);
-            setTimeout(() => { isAnimating = false; }, 250);
-        } else {
-            isAnimating = false;
         }
     }
 
