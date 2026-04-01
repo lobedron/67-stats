@@ -2,10 +2,19 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>Lob Analytics — XRAYGAME</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Lob Analytics — Feed</title>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
+        :root {
+            --bg-main: #0a0a0a;
+            --bg-card: #141414;
+            --accent: #ffffff;
+            --text-secondary: #888;
+            --border: #222;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -14,786 +23,391 @@
         }
 
         body {
-            background: #111;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
-            padding: 16px;
+            background: var(--bg-main);
+            font-family: 'Geologica', sans-serif;
             color: #e0e0e0;
+            line-height: 1.5;
+            overflow-x: hidden;
         }
 
-        .app {
-            max-width: 560px;
-            margin: 0 auto;
-            background: #1a1a1a;
-            border-radius: 32px;
-            overflow: hidden;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-        }
-
-        .channel-card {
+        /* Шапка канала */
+        .channel-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 16px 20px;
-            background: #0f0f0f;
-            border-bottom: 1px solid #2a2a2a;
         }
+
         .channel-avatar {
-            width: 48px;
-            height: 48px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            object-fit: cover;
-            background: #2a2a2a;
-        }
-        .channel-info {
-            flex: 1;
-        }
-        .channel-name {
-            font-weight: 600;
-            font-size: 1rem;
-            color: #fff;
-            text-decoration: none;
-        }
-        .channel-handle {
-            font-size: 0.7rem;
-            color: #8a8a8a;
-        }
-        .channel-link {
-            background: #2a2a2a;
-            padding: 6px 12px;
-            border-radius: 40px;
-            font-size: 0.7rem;
-            color: #ccc;
-            text-decoration: none;
-            transition: 0.1s;
-        }
-        .channel-link:active {
-            background: #3a3a3a;
+            border: 1px solid var(--border);
         }
 
-        .header {
-            padding: 20px 20px 12px 20px;
-            border-bottom: 1px solid #2a2a2a;
-        }
-        .header h1 {
-            font-size: 1.75rem;
-            font-weight: 500;
-            letter-spacing: -0.3px;
-            background: linear-gradient(135deg, #f0f0f0, #b0b0b0);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-        .header p {
-            font-size: 0.75rem;
-            color: #6a6a6a;
-            margin-top: 6px;
-        }
-
-        .tabs {
-            display: flex;
-            padding: 12px 20px 0 20px;
-            gap: 24px;
-            border-bottom: 1px solid #2a2a2a;
-        }
-        .tab {
+        .channel-info h2 {
             font-size: 0.9rem;
-            font-weight: 500;
-            padding-bottom: 8px;
-            color: #8a8a8a;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .channel-info p {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        /* Основная лента */
+        .feed-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 16px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        .video-item {
+            background: var(--bg-card);
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: transform 0.2s ease, border-color 0.2s ease;
             cursor: pointer;
-            transition: 0.2s;
-            border-bottom: 2px solid transparent;
-        }
-        .tab.active {
-            color: #ffffff;
-            border-bottom-color: #ffffff;
         }
 
-        .tab-content {
-            display: none;
-            padding: 20px;
-            animation: fadeIn 0.25s ease;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px);}
-            to   { opacity: 1; transform: translateY(0);}
+        .video-item:active {
+            transform: scale(0.98);
         }
 
-        .video-card {
-            transition: opacity 0.2s ease, transform 0.2s ease;
-        }
-        .video-card.fade-out {
-            opacity: 0;
-            transform: translateX(8px);
-        }
-        .video-card.fade-in {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        .thumbnail {
-            width: 100%;
-            border-radius: 20px;
-            background: #2a2a2a;
+        .thumb-wrapper {
+            position: relative;
             aspect-ratio: 16/9;
+            background: #1a1a1a;
+        }
+
+        .thumb-wrapper img {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
         }
+
+        .video-content {
+            padding: 16px;
+        }
+
         .video-title {
             font-size: 1rem;
-            font-weight: 500;
-            margin: 12px 0 8px;
-            line-height: 1.35;
+            font-weight: 400;
+            margin-bottom: 12px;
             color: #f0f0f0;
-            min-height: 2.7rem;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            text-overflow: ellipsis;
         }
-        .stats-grid {
-            background: #0f0f0f;
-            border-radius: 24px;
+
+        .quick-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .quick-stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Модальное окно (Детали) */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-main);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            overflow-y: auto;
+            padding-bottom: 40px;
+        }
+
+        .modal.active { display: flex; }
+
+        .modal-header {
             padding: 16px;
-            margin: 12px 0;
             display: flex;
             justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
         }
-        .stat-item {
-            flex: 1;
-            text-align: center;
-        }
-        .stat-label {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #8a8a8a;
-        }
-        .stat-number {
-            font-size: 1.4rem;
-            font-weight: 600;
-            font-family: monospace;
-            color: #e0e0e0;
-        }
-        .growth-badge {
-            margin-top: 8px;
-            font-size: 0.75rem;
-            background: #222;
-            border-radius: 40px;
-            padding: 6px 12px;
-            display: inline-block;
-            width: auto;
-            text-align: center;
-        }
-        .growth-badge.hot { background: #2c1a0c; color: #e67e22; }
-        .growth-badge.normal { background: #1a2a1a; color: #6fbf6f; }
-        .growth-badge.slow { background: #222; color: #aaa; }
-        .growth-badge.wait { background: #0a2a3a; color: #5dade2; }
 
-        .nav-buttons {
-            display: flex;
-            gap: 12px;
-            margin: 20px 0 16px;
-        }
-        button {
-            background: #2a2a2a;
+        .close-btn {
+            background: var(--border);
             border: none;
-            padding: 12px 16px;
-            border-radius: 44px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #e0e0e0;
-            flex: 1;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            touch-action: manipulation;
-        }
-        button:active {
-            transform: scale(0.97);
-            background: #3a3a3a;
-        }
-        .primary-btn {
-            background: #3a3a3a;
-            color: white;
-        }
-        .secondary-btn {
-            background: #222;
-            color: #ccc;
-        }
-        .counter {
-            text-align: center;
-            font-size: 0.75rem;
-            color: #6a6a6a;
-            margin: 12px 0;
-        }
-        .last-update {
-            text-align: center;
-            font-size: 0.7rem;
-            color: #5a5a5a;
-            margin-top: 16px;
-        }
-
-        .filter-group {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin: 16px 0;
-        }
-        .filter-chip {
-            background: #222;
+            color: #fff;
             padding: 8px 16px;
             border-radius: 40px;
             font-size: 0.8rem;
-            cursor: pointer;
-            transition: 0.1s;
-            text-align: center;
-        }
-        .filter-chip.active {
-            background: #3a3a3a;
-            color: white;
-        }
-        .center-btn {
-            display: flex;
-            justify-content: center;
-            margin: 20px 0 12px;
-        }
-        .center-btn button {
-            max-width: 220px;
         }
 
-        .youtube-link {
-            display: inline-block;
-            background: #222;
-            padding: 8px 16px;
-            border-radius: 40px;
-            font-size: 0.75rem;
-            color: #aaa;
-            text-decoration: none;
-            margin-top: 12px;
-            transition: 0.1s;
-        }
-        .youtube-link:active {
-            background: #3a3a3a;
-        }
-
-        .chart-container {
-            background: #0f0f0f;
-            border-radius: 24px;
-            padding: 12px;
-            margin: 12px 0;
-        }
-        canvas {
-            max-height: 220px;
+        .modal-body {
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
             width: 100%;
         }
 
-        .footer {
-            text-align: right;
-            padding: 12px 20px 20px;
-            font-size: 0.65rem;
-            color: #4a4a4a;
-            border-top: 1px solid #2a2a2a;
+        .chart-card {
+            background: #0f0f0f;
+            border-radius: 24px;
+            padding: 16px;
+            margin: 20px 0;
+            border: 1px solid var(--border);
         }
 
-        @media (max-width: 480px) {
-            body { padding: 8px; }
-            .stat-number { font-size: 1.2rem; }
-            .video-title { font-size: 0.95rem; min-height: 2.5rem; }
-            .filter-chip { padding: 6px 12px; font-size: 0.75rem; }
-            .channel-avatar { width: 40px; height: 40px; }
-            .channel-name { font-size: 0.9rem; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 20px;
         }
+
+        .stat-box {
+            background: var(--bg-card);
+            padding: 16px;
+            border-radius: 20px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-box .label { font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px; }
+        .stat-box .val { font-size: 1.2rem; font-weight: 600; }
+
+        .growth-badge {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .growth-up { background: #1a2e1a; color: #4ade80; }
+        .growth-wait { background: #1a1a2e; color: #60a5fa; }
+
+        @media (min-width: 768px) {
+            .feed-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Кастомный скроллбар */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg-main); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     </style>
 </head>
 <body>
-<div class="app">
-    <div class="channel-card">
-        <img class="channel-avatar" id="channelAvatar" src="https://yt3.googleusercontent.com/B1IMRSl53O2y-wYM6ZgrOJTextnb0UksTOC40PhD_eNDi0tuZHa7Xs8-Kfd0T-tmfv-oJ5rV=s160-c-k-c0x00ffffff-no-rj" alt="avatar">
-        <div class="channel-info">
-            <a href="https://www.youtube.com/@xraygame" target="_blank" class="channel-name" id="channelName">XRAYGAME</a>
-            <div class="channel-handle" id="channelStats">@xraygame • загрузка...</div>
-        </div>
-        <a href="https://www.youtube.com/@xraygame/videos" target="_blank" class="channel-link">📺 Все видео</a>
+
+<div class="channel-header">
+    <img src="" id="chAvatar" class="channel-avatar" alt="">
+    <div class="channel-info">
+        <h2 id="chName">Загрузка...</h2>
+        <p id="chMeta">@xraygame</p>
+    </div>
+</div>
+
+<div class="feed-container" id="videoFeed">
     </div>
 
-    <div class="header">
-        <h1>Lob Analytics</h1>
-        <p>мониторинг просмотров и динамики</p>
+<div class="modal" id="statsModal">
+    <div class="modal-header">
+        <span style="font-weight: 600;">Аналитика видео</span>
+        <button class="close-btn" onclick="closeModal()">Закрыть</button>
     </div>
+    <div class="modal-body">
+        <div id="modalThumb" class="thumb-wrapper" style="border-radius: 20px; margin-bottom: 16px;"></div>
+        <h2 id="modalTitle" style="font-size: 1.2rem; margin-bottom: 8px;"></h2>
+        
+        <div id="modalGrowth"></div>
 
-    <div class="tabs">
-        <div class="tab active" data-tab="stats">Статистика</div>
-        <div class="tab" data-tab="chart">График</div>
-        <div class="tab" data-tab="insights">Аналитика</div>
-    </div>
+        <div class="chart-card">
+            <canvas id="detailChart"></canvas>
+        </div>
 
-    <div id="statsTab" class="tab-content active">
-        <div id="videoCardContainer"></div>
-        <div class="nav-buttons">
-            <button id="prevBtn" class="secondary-btn">◀ Назад</button>
-            <button id="nextBtn" class="secondary-btn">Вперёд ▶</button>
-        </div>
-        <div class="filter-group">
-            <div class="filter-chip active" data-sort="original">Исходный</div>
-            <div class="filter-chip" data-sort="views">По просмотрам</div>
-            <div class="filter-chip" data-sort="growth">По росту (час)</div>
-        </div>
-        <div class="center-btn">
-            <button id="refreshBtn" class="primary-btn">⟳ Обновить данные</button>
-        </div>
-        <div class="counter" id="videoCounter"></div>
-        <div class="last-update" id="lastUpdateTime"></div>
-    </div>
+        <div class="stats-grid" id="modalStatsGrid">
+            </div>
 
-    <div id="chartTab" class="tab-content">
-        <div class="video-title" id="chartVideoTitle">Выберите видео</div>
-        <div class="chart-container">
-            <canvas id="viewsChart" width="400" height="200"></canvas>
-        </div>
-        <div class="stats-grid" id="chartStats"></div>
-        <div class="center-btn">
-            <button id="refreshChartBtn" class="primary-btn">⟳ Обновить график</button>
-        </div>
-    </div>
-
-    <div id="insightsTab" class="tab-content">
-        <div id="insightsList"></div>
-    </div>
-
-    <div class="footer">
-        <span>lobedron</span> &nbsp;|&nbsp; <span id="version">v3.0 — автообновление с канала</span>
+        <a href="" id="modalYTLink" target="_blank" style="display: block; text-align: center; margin-top: 24px; color: var(--text-secondary); text-decoration: none; font-size: 0.8rem; background: var(--border); padding: 12px; border-radius: 16px;">Открыть в приложении YouTube</a>
     </div>
 </div>
 
 <script>
-    // ========== КОНФИГ ==========
     const API_KEY = 'AIzaSyCJQp6Yo_tHBJOQAF5JG-lXN7wsTpVDAXk';
-    const CHANNEL_HANDLE = '@xraygame';  // или можно直接用 ID: UCYhafwbfgH6gQqF9fLwqZvA
+    const HANDLE = 'xraygame';
     
-    // Состояние
     let allVideos = [];
-    let currentList = [];
-    let currentIndex = 0;
-    let lastUpdateTime = null;
-    let analytics = {};
-    let viewsChart = null;
-    let animationInProgress = false;
+    let analytics = JSON.parse(localStorage.getItem('lob_analytics_v3') || '{}');
+    let currentChart = null;
 
-    // ---------- Вспомогательные ----------
-    function formatNumber(num) {
-        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-    }
-
-    function formatTime(timestamp) {
-        if (!timestamp) return "—";
-        const date = new Date(timestamp);
-        return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-    }
-
-    // ---------- Аналитика (localStorage) ----------
-    function loadAnalytics() {
-        const saved = localStorage.getItem('lob_analytics');
-        if (saved) analytics = JSON.parse(saved);
-        else analytics = {};
-    }
-    function saveAnalytics() {
-        localStorage.setItem('lob_analytics', JSON.stringify(analytics));
-    }
-
-    function updateAnalytics(videoId, currentViews) {
-        const now = Date.now();
-        if (!analytics[videoId]) analytics[videoId] = { history: [] };
-        const prev = analytics[videoId];
-        const lastEntry = prev.history[0];
-        if (!lastEntry || (now - lastEntry.timestamp > 30 * 60 * 1000) || lastEntry.views !== currentViews) {
-            prev.history.unshift({ views: currentViews, timestamp: now });
-            if (prev.history.length > 50) prev.history.pop();
-        }
-        saveAnalytics();
-    }
-
-    function getGrowthRate(videoId) {
-        const data = analytics[videoId];
-        if (!data || data.history.length < 2) return null;
-        const latest = data.history[0];
-        const prev = data.history[1];
-        const hoursDiff = (latest.timestamp - prev.timestamp) / (60 * 60 * 1000);
-        if (hoursDiff <= 0) return null;
-        const diff = latest.views - prev.views;
-        const perHour = Math.round(diff / hoursDiff);
-        return { perHour, diff, hours: hoursDiff };
-    }
-
-    // ========== ОСНОВНАЯ ЛОГИКА: получение видео с канала ==========
-    
-    // Шаг 1: получить ID канала по handle
-    async function getChannelIdByHandle(handle) {
-        const url = `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${handle.replace('@', '')}&key=${API_KEY}`;
-        const response = await fetch(url);
-        const data = await response.json();
-        if (!data.items || data.items.length === 0) {
-            throw new Error('Канал не найден');
-        }
-        return data.items[0].id;
-    }
-
-    // Шаг 2: получить информацию о канале (название, аватар, подписчики)
-    async function getChannelInfo(channelId) {
-        const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelId}&key=${API_KEY}`;
-        const response = await fetch(url);
-        const data = await response.json();
-        if (!data.items || data.items.length === 0) return null;
-        const item = data.items[0];
-        return {
-            title: item.snippet.title,
-            avatar: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
-            subscribers: parseInt(item.statistics.subscriberCount || 0),
-            videosCount: parseInt(item.statistics.videoCount || 0)
-        };
-    }
-
-    // Шаг 3: получить плейлист загруженных видео (upload playlist)
-    async function getUploadPlaylistId(channelId) {
-        const url = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channelId}&key=${API_KEY}`;
-        const response = await fetch(url);
-        const data = await response.json();
-        if (!data.items || data.items.length === 0) {
-            throw new Error('Не найден плейлист загрузок');
-        }
-        return data.items[0].contentDetails.relatedPlaylists.uploads;
-    }
-
-    // Шаг 4: получить список видео из плейлиста
-    async function getVideosFromPlaylist(playlistId, maxResults = 50) {
-        let videos = [];
-        let nextPageToken = null;
-        
-        do {
-            let url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&maxResults=50&key=${API_KEY}`;
-            if (nextPageToken) url += `&pageToken=${nextPageToken}`;
-            
-            const response = await fetch(url);
-            const data = await response.json();
-            
-            if (data.items) {
-                videos.push(...data.items);
-            }
-            nextPageToken = data.nextPageToken;
-        } while (nextPageToken && videos.length < maxResults);
-        
-        return videos.slice(0, maxResults);
-    }
-
-    // Шаг 5: получить детальную статистику для видео (просмотры, лайки, комментарии)
-    async function getVideoStats(videoIds) {
-        if (videoIds.length === 0) return [];
-        const idsString = videoIds.join(',');
-        const url = `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${idsString}&key=${API_KEY}`;
-        const response = await fetch(url);
-        const data = await response.json();
-        return data.items || [];
-    }
-
-    // Основная функция: собрать все данные
-    async function fetchAllVideosFromChannel() {
+    async function init() {
         try {
-            // 1. Получаем ID канала
-            const channelId = await getChannelIdByHandle(CHANNEL_HANDLE);
-            console.log('Channel ID:', channelId);
+            // 1. Инфо канала
+            const chRes = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&forHandle=${HANDLE}&key=${API_KEY}`);
+            const chData = await chRes.json();
+            const channel = chData.items[0];
             
-            // 2. Получаем информацию о канале для шапки
-            const channelInfo = await getChannelInfo(channelId);
-            if (channelInfo) {
-                document.getElementById('channelName').textContent = channelInfo.title;
-                document.getElementById('channelStats').textContent = `@${CHANNEL_HANDLE.replace('@', '')} • ${formatNumber(channelInfo.subscribers)} подписчиков • ${channelInfo.videosCount} видео`;
-                if (channelInfo.avatar) {
-                    document.getElementById('channelAvatar').src = channelInfo.avatar;
-                }
-            }
+            document.getElementById('chName').innerText = channel.snippet.title;
+            document.getElementById('chAvatar').src = channel.snippet.thumbnails.default.url;
+            document.getElementById('chMeta').innerText = `@${HANDLE} • ${parseInt(channel.statistics.subscriberCount).toLocaleString()} сабов`;
+
+            // 2. Список видео
+            const uploadId = channel.contentDetails.relatedPlaylists.uploads;
+            const vRes = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadId}&maxResults=40&key=${API_KEY}`);
+            const vData = await vRes.json();
             
-            // 3. Получаем плейлист загруженных видео
-            const uploadPlaylistId = await getUploadPlaylistId(channelId);
-            console.log('Upload playlist ID:', uploadPlaylistId);
-            
-            // 4. Получаем список видео из плейлиста
-            const playlistItems = await getVideosFromPlaylist(uploadPlaylistId, 50);
-            
-            // 5. Собираем ID видео и базовую информацию
-            const videoIds = playlistItems.map(item => item.snippet.resourceId.videoId);
-            const videoBasicInfo = playlistItems.map(item => ({
-                id: item.snippet.resourceId.videoId,
-                title: item.snippet.title,
-                thumb: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url,
-                publishedAt: item.snippet.publishedAt,
-                url: `https://youtu.be/${item.snippet.resourceId.videoId}`
-            }));
-            
-            // 6. Получаем статистику (просмотры, лайки, комментарии)
-            const statsData = await getVideoStats(videoIds);
+            const videoIds = vData.items.map(i => i.snippet.resourceId.videoId);
+            const sRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoIds.join(',')}&key=${API_KEY}`);
+            const sData = await sRes.json();
+
             const statsMap = {};
-            statsData.forEach(item => {
-                statsMap[item.id] = {
-                    views: parseInt(item.statistics?.viewCount || 0),
-                    likes: parseInt(item.statistics?.likeCount || 0),
-                    comments: parseInt(item.statistics?.commentCount || 0)
+            sData.items.forEach(i => statsMap[i.id] = i.statistics);
+
+            allVideos = vData.items.map(item => {
+                const id = item.snippet.resourceId.videoId;
+                const vStats = statsMap[id];
+                const videoObj = {
+                    id: id,
+                    title: item.snippet.title,
+                    thumb: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url,
+                    views: parseInt(vStats.viewCount || 0),
+                    likes: parseInt(vStats.likeCount || 0),
+                    comments: parseInt(vStats.commentCount || 0),
+                    published: item.snippet.publishedAt
                 };
+                updateLocalHistory(id, videoObj.views);
+                return videoObj;
             });
-            
-            // 7. Собираем полные данные
-            const fullVideos = videoBasicInfo.map(video => ({
-                ...video,
-                ...statsMap[video.id],
-                views: statsMap[video.id]?.views || 0,
-                likes: statsMap[video.id]?.likes || 0,
-                comments: statsMap[video.id]?.comments || 0
-            }));
-            
-            // Обновляем аналитику
-            fullVideos.forEach(v => updateAnalytics(v.id, v.views));
-            lastUpdateTime = Date.now();
-            
-            return fullVideos;
-        } catch (error) {
-            console.error('Ошибка при загрузке данных канала:', error);
-            throw error;
-        }
-    }
 
-    // Обновление данных с сохранением порядка
-    async function refreshData() {
-        try {
-            const freshVideos = await fetchAllVideosFromChannel();
-            allVideos = freshVideos;
-            
-            const currentSort = document.querySelector('.filter-chip.active')?.dataset.sort || 'original';
-            if (currentSort === 'views') {
-                currentList = [...allVideos].sort((a,b) => b.views - a.views);
-            } else if (currentSort === 'growth') {
-                currentList = [...allVideos].sort((a,b) => {
-                    const gA = getGrowthRate(a.id)?.perHour || 0;
-                    const gB = getGrowthRate(b.id)?.perHour || 0;
-                    return gB - gA;
-                });
-            } else {
-                currentList = [...allVideos];
-            }
-            
-            if (currentIndex >= currentList.length) currentIndex = 0;
-            renderCurrentTab();
-        } catch(e) {
+            renderFeed();
+        } catch (e) {
             console.error(e);
-            document.getElementById('videoCardContainer').innerHTML = `<div style="color:#ff8a8a">❌ Ошибка загрузки канала: ${e.message}</div>`;
+            document.getElementById('videoFeed').innerHTML = "Ошибка доступа. Проверь API ключ.";
         }
     }
 
-    // ---------- Отрисовка (такая же как раньше, но без VIDEO_URLS) ----------
-    function buildVideoCardHTML(video) {
-        const growth = getGrowthRate(video.id);
-        let growthHtml = '';
-        if (growth) {
-            let cls = 'slow';
-            let text = `📉 ${growth.perHour} просм/час`;
-            if (growth.perHour >= 100) { cls = 'hot'; text = `🔥 ${growth.perHour} просм/час`; }
-            else if (growth.perHour >= 20) { cls = 'normal'; text = `📈 ${growth.perHour} просм/час`; }
-            growthHtml = `<div class="growth-badge ${cls}">${text}</div>`;
-        } else {
-            growthHtml = `<div class="growth-badge wait">⏳ накопление данных…</div>`;
+    function updateLocalHistory(id, views) {
+        const now = Date.now();
+        if (!analytics[id]) analytics[id] = { history: [] };
+        const last = analytics[id].history[0];
+        if (!last || last.views !== views) {
+            analytics[id].history.unshift({ views, timestamp: now });
+            if (analytics[id].history.length > 50) analytics[id].history.pop();
+            localStorage.setItem('lob_analytics_v3', JSON.stringify(analytics));
         }
+    }
 
-        return `
-            <div class="video-card" id="videoCard">
-                <img class="thumbnail" src="${video.thumb}" alt="preview" loading="lazy">
-                <div class="video-title">${escapeHtml(video.title)}</div>
-                <div class="stats-grid">
-                    <div class="stat-item"><div class="stat-label">ПРОСМОТРЫ</div><div class="stat-number">${formatNumber(video.views)}</div></div>
-                    <div class="stat-item"><div class="stat-label">ЛАЙКИ</div><div class="stat-number">${formatNumber(video.likes)}</div></div>
-                    <div class="stat-item"><div class="stat-label">КОММЕНТАРИИ</div><div class="stat-number">${formatNumber(video.comments)}</div></div>
+    function renderFeed() {
+        const container = document.getElementById('videoFeed');
+        container.innerHTML = allVideos.map(v => `
+            <div class="video-item" onclick="openDetails('${v.id}')">
+                <div class="thumb-wrapper">
+                    <img src="${v.thumb}" loading="lazy">
                 </div>
-                ${growthHtml}
-                <a href="${video.url}" target="_blank" class="youtube-link">🔗 Смотреть на YouTube</a>
+                <div class="video-content">
+                    <div class="video-title">${v.title}</div>
+                    <div class="quick-stats">
+                        <span>👁 ${v.views.toLocaleString()}</span>
+                        <span>👍 ${v.likes.toLocaleString()}</span>
+                    </div>
+                </div>
             </div>
+        `).join('');
+    }
+
+    function openDetails(id) {
+        const v = allVideos.find(x => x.id === id);
+        const modal = document.getElementById('statsModal');
+        const history = analytics[id]?.history || [];
+        
+        document.getElementById('modalTitle').innerText = v.title;
+        document.getElementById('modalThumb').innerHTML = `<img src="${v.thumb}" style="width:100%; border-radius:20px;">`;
+        document.getElementById('modalYTLink').href = `https://youtu.be/${id}`;
+        
+        // Рост
+        const growthDiv = document.getElementById('modalGrowth');
+        if (history.length > 1) {
+            const last = history[0];
+            const prev = history[1];
+            const diff = last.views - prev.views;
+            const hours = (last.timestamp - prev.timestamp) / 3600000;
+            const perHour = Math.round(diff / (hours || 1));
+            growthDiv.innerHTML = `<div class="growth-badge growth-up">📈 +${perHour} просм. / час</div>`;
+        } else {
+            growthDiv.innerHTML = `<div class="growth-badge growth-wait">⏳ собираем данные...</div>`;
+        }
+
+        // Статы
+        document.getElementById('modalStatsGrid').innerHTML = `
+            <div class="stat-box"><div class="label">Просмотры</div><div class="val">${v.views.toLocaleString()}</div></div>
+            <div class="stat-box"><div class="label">Лайки</div><div class="val">${v.likes.toLocaleString()}</div></div>
+            <div class="stat-box"><div class="label">Комменты</div><div class="val">${v.comments.toLocaleString()}</div></div>
+            <div class="stat-box"><div class="label">Дней в эфире</div><div class="val">${Math.floor((Date.now() - new Date(v.published))/86400000)}</div></div>
         `;
+
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        // График
+        setTimeout(() => renderChart(history), 100);
     }
 
-    function renderStatsTab(animate = true) {
-        if (currentList.length === 0) {
-            document.getElementById('videoCardContainer').innerHTML = '<div style="text-align:center; padding:40px;">⏳ Загрузка видео...</div>';
-            return;
-        }
-        const video = currentList[currentIndex];
-        if (!video) return;
+    function renderChart(history) {
+        const ctx = document.getElementById('detailChart').getContext('2d');
+        if (currentChart) currentChart.destroy();
 
-        const container = document.getElementById('videoCardContainer');
-        const newHtml = buildVideoCardHTML(video);
-
-        if (!animate) {
-            container.innerHTML = newHtml;
-            document.getElementById('videoCounter').innerHTML = `${currentIndex+1} / ${currentList.length}`;
-            document.getElementById('lastUpdateTime').innerHTML = `🕒 обновлено: ${formatTime(lastUpdateTime)}`;
-            return;
-        }
-
-        if (animationInProgress) return;
-        const oldCard = document.querySelector('#videoCard');
-        if (!oldCard) {
-            container.innerHTML = newHtml;
-            document.getElementById('videoCounter').innerHTML = `${currentIndex+1} / ${currentList.length}`;
-            document.getElementById('lastUpdateTime').innerHTML = `🕒 обновлено: ${formatTime(lastUpdateTime)}`;
-            return;
-        }
-
-        animationInProgress = true;
-        oldCard.classList.add('fade-out');
-        setTimeout(() => {
-            container.innerHTML = newHtml;
-            document.getElementById('videoCounter').innerHTML = `${currentIndex+1} / ${currentList.length}`;
-            document.getElementById('lastUpdateTime').innerHTML = `🕒 обновлено: ${formatTime(lastUpdateTime)}`;
-            const newCard = document.querySelector('#videoCard');
-            if (newCard) {
-                newCard.classList.add('fade-in');
-                setTimeout(() => {
-                    if (newCard) newCard.classList.remove('fade-in');
-                }, 200);
-            }
-            animationInProgress = false;
-        }, 200);
-    }
-
-    function renderChartTab() {
-        if (currentList.length === 0) return;
-        const video = currentList[currentIndex];
-        if (!video) return;
-        document.getElementById('chartVideoTitle').innerText = video.title;
-        const history = analytics[video.id]?.history || [];
-        const points = history.slice().reverse();
-        const labels = points.map(p => formatTime(p.timestamp));
-        const data = points.map(p => p.views);
-        const ctx = document.getElementById('viewsChart').getContext('2d');
-        if (viewsChart) viewsChart.destroy();
-        viewsChart = new Chart(ctx, {
+        const data = [...history].reverse();
+        currentChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: labels,
+                labels: data.map(i => new Date(i.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})),
                 datasets: [{
                     label: 'Просмотры',
-                    data: data,
-                    borderColor: '#b0b0b0',
-                    backgroundColor: 'rgba(80,80,80,0.2)',
-                    tension: 0.2,
-                    pointRadius: 2,
-                    borderWidth: 2
+                    data: data.map(i => i.views),
+                    borderColor: '#fff',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    fill: true,
+                    backgroundColor: 'rgba(255,255,255,0.05)'
                 }]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { labels: { color: '#ccc', font: { size: 10 } } } },
-                scales: { y: { ticks: { color: '#aaa' }, grid: { color: '#2a2a2a' } },
-                          x: { ticks: { color: '#aaa', maxRotation: 45, autoSkip: true } } }
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: '#555', maxRotation: 0 }, grid: { display: false } },
+                    y: { ticks: { color: '#555' }, grid: { color: '#1a1a1a' } }
+                }
             }
         });
-        const lastViews = history[0]?.views || video.views;
-        const firstViews = history[history.length-1]?.views || lastViews;
-        const totalGain = lastViews - firstViews;
-        document.getElementById('chartStats').innerHTML = `
-            <div class="stat-item"><div class="stat-label">ЗА ВЕСЬ ПЕРИОД</div><div class="stat-number">${formatNumber(totalGain)}</div></div>
-            <div class="stat-item"><div class="stat-label">ТЕКУЩИЕ</div><div class="stat-number">${formatNumber(lastViews)}</div></div>
-        `;
     }
 
-    function renderInsightsTab() {
-        if (allVideos.length === 0) return;
-        const sorted = [...allVideos].sort((a,b) => {
-            const gA = getGrowthRate(a.id)?.perHour || 0;
-            const gB = getGrowthRate(b.id)?.perHour || 0;
-            return gB - gA;
-        });
-        let html = `<div style="font-size:0.8rem; margin-bottom:12px;">📊 Рейтинг по скорости роста (просмотров в час)</div>`;
-        sorted.forEach((v, idx) => {
-            const growth = getGrowthRate(v.id);
-            let rate = growth ? `${growth.perHour}` : '—';
-            let cls = '';
-            if (growth && growth.perHour >= 100) cls = '🔥';
-            else if (growth && growth.perHour >= 20) cls = '📈';
-            else if (growth) cls = '⏳';
-            html += `<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #2a2a2a;">
-                        <span style="flex:1; font-size:0.85rem;">${idx+1}. ${escapeHtml(v.title.slice(0,45))}</span>
-                        <span style="font-family:monospace;">${cls} ${rate}</span>
-                     </div>`;
-        });
-        document.getElementById('insightsList').innerHTML = html;
-    }
-
-    function renderCurrentTab() {
-        const activeTab = document.querySelector('.tab.active').dataset.tab;
-        if (activeTab === 'stats') renderStatsTab(true);
-        else if (activeTab === 'chart') renderChartTab();
-        else if (activeTab === 'insights') renderInsightsTab();
-    }
-
-    function setSort(sortType) {
-        if (sortType === 'original') currentList = [...allVideos];
-        else if (sortType === 'views') currentList = [...allVideos].sort((a,b) => b.views - a.views);
-        else if (sortType === 'growth') currentList = [...allVideos].sort((a,b) => {
-            const gA = getGrowthRate(a.id)?.perHour || 0;
-            const gB = getGrowthRate(b.id)?.perHour || 0;
-            return gB - gA;
-        });
-        currentIndex = 0;
-        renderCurrentTab();
-    }
-
-    function changeVideo(delta) {
-        if (animationInProgress) return;
-        const newIndex = currentIndex + delta;
-        if (newIndex >= 0 && newIndex < currentList.length) {
-            currentIndex = newIndex;
-            renderStatsTab(true);
-        }
-    }
-
-    function init() {
-        loadAnalytics();
-        refreshData().then(() => {
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                    document.getElementById(`${tab.dataset.tab}Tab`).classList.add('active');
-                    renderCurrentTab();
-                });
-            });
-            document.querySelectorAll('.filter-chip').forEach(chip => {
-                chip.addEventListener('click', () => {
-                    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-                    chip.classList.add('active');
-                    setSort(chip.dataset.sort);
-                });
-            });
-            document.getElementById('prevBtn').onclick = () => changeVideo(-1);
-            document.getElementById('nextBtn').onclick = () => changeVideo(1);
-            document.getElementById('refreshBtn').onclick = () => refreshData().then(() => renderCurrentTab());
-            document.getElementById('refreshChartBtn').onclick = () => refreshData().then(() => renderChartTab());
-        });
-    }
-
-    function escapeHtml(str) {
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
+    function closeModal() {
+        document.getElementById('statsModal').classList.remove('active');
+        document.body.style.overflow = 'auto';
     }
 
     init();
 </script>
+
 </body>
 </html>
