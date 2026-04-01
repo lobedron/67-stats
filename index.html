@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>Lob Analytics</title>
+    <title>Lob Analytics — XRAYGAME</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
@@ -29,7 +29,6 @@
             box-shadow: 0 8px 24px rgba(0,0,0,0.4);
         }
 
-        /* Блок канала */
         .channel-card {
             display: flex;
             align-items: center;
@@ -314,12 +313,11 @@
 </head>
 <body>
 <div class="app">
-    <!-- Блок канала -->
     <div class="channel-card">
-        <img class="channel-avatar" src="https://yt3.googleusercontent.com/ytc/AIdro_l8X7h4v5k2p9Q3x6y8z1a2b3c4d5e6f7g8h9i0j1=w48-h48-c-k-c0x00ffffff-no-rj" alt="avatar" onerror="this.src='https://via.placeholder.com/48?text=?'">
+        <img class="channel-avatar" id="channelAvatar" src="https://yt3.googleusercontent.com/ytc/AIdro_l8X7h4v5k2p9Q3x6y8z1a2b3c4d5e6f7g8h9i0j1=w48-h48-c-k-c0x00ffffff-no-rj" alt="avatar">
         <div class="channel-info">
-            <a href="https://www.youtube.com/@xraygame" target="_blank" class="channel-name">XRAYGAME</a>
-            <div class="channel-handle">@xraygame • 5190 подписчиков</div>
+            <a href="https://www.youtube.com/@xraygame" target="_blank" class="channel-name" id="channelName">XRAYGAME</a>
+            <div class="channel-handle" id="channelStats">@xraygame • загрузка...</div>
         </div>
         <a href="https://www.youtube.com/@xraygame/videos" target="_blank" class="channel-link">📺 Все видео</a>
     </div>
@@ -369,28 +367,16 @@
     </div>
 
     <div class="footer">
-        <span>lobedron</span> &nbsp;|&nbsp; <span id="version">v2.4</span>
+        <span>lobedron</span> &nbsp;|&nbsp; <span id="version">v3.0 — автообновление с канала</span>
     </div>
 </div>
 
 <script>
-    // ---------- КОНФИГ ----------
+    // ========== КОНФИГ ==========
     const API_KEY = 'AIzaSyCJQp6Yo_tHBJOQAF5JG-lXN7wsTpVDAXk';
-    const VIDEO_URLS = [
-        "https://www.youtube.com/watch?v=vhbNHMy9w_8",
-        "https://www.youtube.com/watch?v=ia9xsw4mACI",
-        "https://www.youtube.com/watch?v=il_quDDa3zA",
-        "https://www.youtube.com/watch?v=K2cejE7BCGU",
-        "https://www.youtube.com/watch?v=sjBK0FrF2Vo",
-        "https://www.youtube.com/watch?v=rVWdiVE6Q5A",
-        "https://www.youtube.com/watch?v=XVnN3ZBamD8",
-        "https://www.youtube.com/watch?v=O_7SX7lToRc",
-        "https://www.youtube.com/watch?v=SaA_cVSHEHg",
-        "https://www.youtube.com/watch?v=6PEz4pt_gzE",
-        "https://www.youtube.com/watch?v=38v0Tmc_Oro",
-        "https://www.youtube.com/watch?v=w7sYCnbAufY"
-    ];
-
+    const CHANNEL_HANDLE = '@xraygame';  // или можно直接用 ID: UCYhafwbfgH6gQqF9fLwqZvA
+    
+    // Состояние
     let allVideos = [];
     let currentList = [];
     let currentIndex = 0;
@@ -399,11 +385,7 @@
     let viewsChart = null;
     let animationInProgress = false;
 
-    function extractVideoId(url) {
-        const match = url.match(/(?:v=|\/)([a-zA-Z0-9_-]{11})/);
-        return match ? match[1] : null;
-    }
-
+    // ---------- Вспомогательные ----------
     function formatNumber(num) {
         return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
     }
@@ -414,6 +396,7 @@
         return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
     }
 
+    // ---------- Аналитика (localStorage) ----------
     function loadAnalytics() {
         const saved = localStorage.getItem('lob_analytics');
         if (saved) analytics = JSON.parse(saved);
@@ -447,55 +430,169 @@
         return { perHour, diff, hours: hoursDiff };
     }
 
-    async function fetchAllVideos() {
-        const ids = VIDEO_URLS.map(extractVideoId).filter(id => id);
-        if (!ids.length) throw new Error("Нет ссылок");
-        const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${ids.join(',')}&key=${API_KEY}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if (!data.items) throw new Error("Ошибка API");
-        const now = Date.now();
-        const videos = data.items.map(item => ({
-            id: item.id,
-            title: item.snippet.title,
-            thumb: item.snippet.thumbnails.high.url,
-            views: parseInt(item.statistics.viewCount || 0),
-            likes: parseInt(item.statistics.likeCount || 0),
-            comments: parseInt(item.statistics.commentCount || 0),
-            url: `https://youtu.be/${item.id}`
-        }));
-        videos.forEach(v => updateAnalytics(v.id, v.views));
-        lastUpdateTime = now;
-        return videos;
+    // ========== ОСНОВНАЯ ЛОГИКА: получение видео с канала ==========
+    
+    // Шаг 1: получить ID канала по handle
+    async function getChannelIdByHandle(handle) {
+        const url = `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${handle.replace('@', '')}&key=${API_KEY}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        if (!data.items || data.items.length === 0) {
+            throw new Error('Канал не найден');
+        }
+        return data.items[0].id;
     }
 
+    // Шаг 2: получить информацию о канале (название, аватар, подписчики)
+    async function getChannelInfo(channelId) {
+        const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelId}&key=${API_KEY}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        if (!data.items || data.items.length === 0) return null;
+        const item = data.items[0];
+        return {
+            title: item.snippet.title,
+            avatar: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
+            subscribers: parseInt(item.statistics.subscriberCount || 0),
+            videosCount: parseInt(item.statistics.videoCount || 0)
+        };
+    }
+
+    // Шаг 3: получить плейлист загруженных видео (upload playlist)
+    async function getUploadPlaylistId(channelId) {
+        const url = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channelId}&key=${API_KEY}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        if (!data.items || data.items.length === 0) {
+            throw new Error('Не найден плейлист загрузок');
+        }
+        return data.items[0].contentDetails.relatedPlaylists.uploads;
+    }
+
+    // Шаг 4: получить список видео из плейлиста
+    async function getVideosFromPlaylist(playlistId, maxResults = 50) {
+        let videos = [];
+        let nextPageToken = null;
+        
+        do {
+            let url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&maxResults=50&key=${API_KEY}`;
+            if (nextPageToken) url += `&pageToken=${nextPageToken}`;
+            
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data.items) {
+                videos.push(...data.items);
+            }
+            nextPageToken = data.nextPageToken;
+        } while (nextPageToken && videos.length < maxResults);
+        
+        return videos.slice(0, maxResults);
+    }
+
+    // Шаг 5: получить детальную статистику для видео (просмотры, лайки, комментарии)
+    async function getVideoStats(videoIds) {
+        if (videoIds.length === 0) return [];
+        const idsString = videoIds.join(',');
+        const url = `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${idsString}&key=${API_KEY}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.items || [];
+    }
+
+    // Основная функция: собрать все данные
+    async function fetchAllVideosFromChannel() {
+        try {
+            // 1. Получаем ID канала
+            const channelId = await getChannelIdByHandle(CHANNEL_HANDLE);
+            console.log('Channel ID:', channelId);
+            
+            // 2. Получаем информацию о канале для шапки
+            const channelInfo = await getChannelInfo(channelId);
+            if (channelInfo) {
+                document.getElementById('channelName').textContent = channelInfo.title;
+                document.getElementById('channelStats').textContent = `@${CHANNEL_HANDLE.replace('@', '')} • ${formatNumber(channelInfo.subscribers)} подписчиков • ${channelInfo.videosCount} видео`;
+                if (channelInfo.avatar) {
+                    document.getElementById('channelAvatar').src = channelInfo.avatar;
+                }
+            }
+            
+            // 3. Получаем плейлист загруженных видео
+            const uploadPlaylistId = await getUploadPlaylistId(channelId);
+            console.log('Upload playlist ID:', uploadPlaylistId);
+            
+            // 4. Получаем список видео из плейлиста
+            const playlistItems = await getVideosFromPlaylist(uploadPlaylistId, 50);
+            
+            // 5. Собираем ID видео и базовую информацию
+            const videoIds = playlistItems.map(item => item.snippet.resourceId.videoId);
+            const videoBasicInfo = playlistItems.map(item => ({
+                id: item.snippet.resourceId.videoId,
+                title: item.snippet.title,
+                thumb: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url,
+                publishedAt: item.snippet.publishedAt,
+                url: `https://youtu.be/${item.snippet.resourceId.videoId}`
+            }));
+            
+            // 6. Получаем статистику (просмотры, лайки, комментарии)
+            const statsData = await getVideoStats(videoIds);
+            const statsMap = {};
+            statsData.forEach(item => {
+                statsMap[item.id] = {
+                    views: parseInt(item.statistics?.viewCount || 0),
+                    likes: parseInt(item.statistics?.likeCount || 0),
+                    comments: parseInt(item.statistics?.commentCount || 0)
+                };
+            });
+            
+            // 7. Собираем полные данные
+            const fullVideos = videoBasicInfo.map(video => ({
+                ...video,
+                ...statsMap[video.id],
+                views: statsMap[video.id]?.views || 0,
+                likes: statsMap[video.id]?.likes || 0,
+                comments: statsMap[video.id]?.comments || 0
+            }));
+            
+            // Обновляем аналитику
+            fullVideos.forEach(v => updateAnalytics(v.id, v.views));
+            lastUpdateTime = Date.now();
+            
+            return fullVideos;
+        } catch (error) {
+            console.error('Ошибка при загрузке данных канала:', error);
+            throw error;
+        }
+    }
+
+    // Обновление данных с сохранением порядка
     async function refreshData() {
         try {
-            const fresh = await fetchAllVideos();
-            const ordered = [];
-            for (let url of VIDEO_URLS) {
-                const id = extractVideoId(url);
-                const found = fresh.find(v => v.id === id);
-                if (found) ordered.push(found);
-            }
-            allVideos = ordered;
+            const freshVideos = await fetchAllVideosFromChannel();
+            allVideos = freshVideos;
+            
             const currentSort = document.querySelector('.filter-chip.active')?.dataset.sort || 'original';
-            if (currentSort === 'views') currentList = [...allVideos].sort((a,b) => b.views - a.views);
-            else if (currentSort === 'growth') {
+            if (currentSort === 'views') {
+                currentList = [...allVideos].sort((a,b) => b.views - a.views);
+            } else if (currentSort === 'growth') {
                 currentList = [...allVideos].sort((a,b) => {
                     const gA = getGrowthRate(a.id)?.perHour || 0;
                     const gB = getGrowthRate(b.id)?.perHour || 0;
                     return gB - gA;
                 });
-            } else currentList = [...allVideos];
+            } else {
+                currentList = [...allVideos];
+            }
+            
             if (currentIndex >= currentList.length) currentIndex = 0;
             renderCurrentTab();
         } catch(e) {
             console.error(e);
-            document.getElementById('videoCardContainer').innerHTML = `<div style="color:#ff8a8a">❌ Ошибка загрузки: ${e.message}</div>`;
+            document.getElementById('videoCardContainer').innerHTML = `<div style="color:#ff8a8a">❌ Ошибка загрузки канала: ${e.message}</div>`;
         }
     }
 
+    // ---------- Отрисовка (такая же как раньше, но без VIDEO_URLS) ----------
     function buildVideoCardHTML(video) {
         const growth = getGrowthRate(video.id);
         let growthHtml = '';
@@ -525,7 +622,10 @@
     }
 
     function renderStatsTab(animate = true) {
-        if (currentList.length === 0) return;
+        if (currentList.length === 0) {
+            document.getElementById('videoCardContainer').innerHTML = '<div style="text-align:center; padding:40px;">⏳ Загрузка видео...</div>';
+            return;
+        }
         const video = currentList[currentIndex];
         if (!video) return;
 
@@ -566,6 +666,7 @@
     }
 
     function renderChartTab() {
+        if (currentList.length === 0) return;
         const video = currentList[currentIndex];
         if (!video) return;
         document.getElementById('chartVideoTitle').innerText = video.title;
@@ -607,6 +708,7 @@
     }
 
     function renderInsightsTab() {
+        if (allVideos.length === 0) return;
         const sorted = [...allVideos].sort((a,b) => {
             const gA = getGrowthRate(a.id)?.perHour || 0;
             const gB = getGrowthRate(b.id)?.perHour || 0;
