@@ -2,182 +2,305 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>YouTube статистика + аналитика</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Lob Analytics</title>
+    <!-- Chart.js для графиков -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
         }
+
         body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f5;
-            margin: 0;
+            background: #111;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
             padding: 16px;
+            color: #e0e0e0;
         }
-        .container {
-            max-width: 500px;
+
+        /* контейнер */
+        .app {
+            max-width: 560px;
             margin: 0 auto;
-            background: white;
-            border-radius: 28px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            background: #1a1a1a;
+            border-radius: 32px;
             overflow: hidden;
-            padding: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            backdrop-filter: blur(0px);
+            transition: all 0.2s ease;
         }
-        .video-card {
-            text-align: center;
+
+        /* шапка */
+        .header {
+            padding: 20px 20px 12px 20px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 500;
+            letter-spacing: -0.3px;
+            background: linear-gradient(135deg, #f0f0f0, #b0b0b0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .header p {
+            font-size: 0.75rem;
+            color: #6a6a6a;
+            margin-top: 6px;
+        }
+
+        /* вкладки */
+        .tabs {
+            display: flex;
+            padding: 12px 20px 0 20px;
+            gap: 24px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+        .tab {
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding-bottom: 8px;
+            color: #8a8a8a;
+            cursor: pointer;
+            transition: 0.2s;
+            border-bottom: 2px solid transparent;
+        }
+        .tab.active {
+            color: #ffffff;
+            border-bottom-color: #ffffff;
+        }
+
+        /* контент вкладок */
+        .tab-content {
+            display: none;
+            padding: 20px;
+            animation: fadeIn 0.25s ease;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px);}
+            to   { opacity: 1; transform: translateY(0);}
+        }
+
+        /* карточка видео */
+        .video-preview {
+            margin-bottom: 24px;
         }
         .thumbnail {
             width: 100%;
             border-radius: 20px;
-            background: #eee;
+            background: #2a2a2a;
             aspect-ratio: 16/9;
             object-fit: cover;
-            margin-bottom: 16px;
+            transition: 0.2s;
         }
-        .title {
-            font-size: 1.4rem;
-            font-weight: 600;
+        .video-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin: 12px 0 8px;
+            line-height: 1.35;
+            color: #f0f0f0;
+        }
+        .stats-grid {
+            background: #0f0f0f;
+            border-radius: 24px;
+            padding: 16px;
             margin: 12px 0;
-            line-height: 1.3;
-        }
-        .stats {
-            background: #f0f0f0;
-            border-radius: 20px;
-            padding: 12px;
-            margin: 16px 0;
-            text-align: left;
-        }
-        .stat {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
-            font-size: 1.1rem;
-            border-bottom: 1px solid #ddd;
+            flex-wrap: wrap;
+            gap: 12px;
         }
-        .stat:last-child {
-            border-bottom: none;
-        }
-        .growth {
-            background: #e8f5e9;
-            margin-top: 8px;
-            border-radius: 16px;
-            padding: 8px 12px;
+        .stat-item {
+            flex: 1;
             text-align: center;
-            font-weight: 500;
-        }
-        .growth.hot {
-            background: #fff3e0;
-            color: #e67e22;
-        }
-        .growth.normal {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-        .growth.slow {
-            background: #f5f5f5;
-            color: #757575;
-        }
-        .growth.new {
-            background: #e3f2fd;
-            color: #1565c0;
         }
         .stat-label {
-            font-weight: 500;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #8a8a8a;
         }
-        .stat-value {
+        .stat-number {
+            font-size: 1.4rem;
+            font-weight: 600;
             font-family: monospace;
-            font-weight: bold;
-            color: #065fd4;
+            color: #e0e0e0;
         }
+        .growth-badge {
+            margin-top: 8px;
+            font-size: 0.75rem;
+            background: #222;
+            border-radius: 40px;
+            padding: 6px 12px;
+            display: inline-block;
+            width: auto;
+            text-align: center;
+        }
+        .growth-badge.hot { background: #2c1a0c; color: #e67e22; }
+        .growth-badge.normal { background: #1a2a1a; color: #6fbf6f; }
+        .growth-badge.slow { background: #222; color: #aaa; }
+        .growth-badge.new { background: #0a2a3a; color: #5dade2; }
+
+        /* навигация */
         .nav-buttons {
             display: flex;
-            justify-content: space-between;
             gap: 12px;
-            margin: 20px 0;
+            margin: 20px 0 16px;
         }
         button {
-            background: #065fd4;
-            color: white;
+            background: #2a2a2a;
             border: none;
-            padding: 12px 20px;
-            border-radius: 40px;
-            font-size: 1rem;
+            padding: 12px 16px;
+            border-radius: 44px;
+            font-size: 0.9rem;
             font-weight: 500;
+            color: #e0e0e0;
             flex: 1;
             cursor: pointer;
-            transition: 0.2s;
+            transition: all 0.2s ease;
             touch-action: manipulation;
         }
         button:active {
             transform: scale(0.97);
-            background: #0b4c8c;
+            background: #3a3a3a;
         }
-        .sort-buttons {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        .sort-buttons button {
-            background: #e0e0e0;
-            color: #333;
-            flex: 1;
-        }
-        .sort-buttons button.active {
-            background: #065fd4;
+        .primary-btn {
+            background: #3a3a3a;
             color: white;
         }
-        .refresh-btn, .reset-analytics {
-            background: #2c3e50;
-            margin-top: 10px;
-        }
-        .reset-analytics {
-            background: #7f8c8d;
+        .secondary-btn {
+            background: #222;
+            color: #ccc;
         }
         .counter {
             text-align: center;
-            font-size: 0.9rem;
-            margin-top: 12px;
-            color: #555;
+            font-size: 0.75rem;
+            color: #6a6a6a;
+            margin: 12px 0;
         }
         .last-update {
             text-align: center;
-            font-size: 0.75rem;
-            color: #888;
+            font-size: 0.7rem;
+            color: #5a5a5a;
             margin-top: 16px;
         }
-        .error {
-            color: #d32f2f;
-            text-align: center;
-            margin: 20px;
+
+        /* график */
+        .chart-container {
+            background: #0f0f0f;
+            border-radius: 24px;
+            padding: 12px;
+            margin: 12px 0;
         }
+        canvas {
+            max-height: 220px;
+            width: 100%;
+        }
+
+        /* фильтры */
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            margin: 16px 0;
+            flex-wrap: wrap;
+        }
+        .filter-chip {
+            background: #222;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .filter-chip.active {
+            background: #3a3a3a;
+            color: white;
+        }
+
+        /* футер */
+        .footer {
+            text-align: right;
+            padding: 12px 20px 20px;
+            font-size: 0.65rem;
+            color: #4a4a4a;
+            border-top: 1px solid #2a2a2a;
+        }
+        a {
+            color: #8a8a8a;
+            text-decoration: none;
+        }
+
+        /* адаптив */
         @media (max-width: 480px) {
             body {
                 padding: 8px;
             }
-            .container {
-                padding: 16px;
-            }
-            .title {
+            .stat-number {
                 font-size: 1.2rem;
             }
-            button {
-                padding: 10px 12px;
-                font-size: 0.9rem;
+            .video-title {
+                font-size: 1rem;
             }
         }
     </style>
 </head>
 <body>
-<div class="container" id="app">
-    <div style="text-align: center; margin-bottom: 16px;">
-        <h2>📊 YouTube статистика</h2>
+<div class="app">
+    <div class="header">
+        <h1>Lob Analytics</h1>
+        <p>мониторинг просмотров и динамики</p>
     </div>
-    <div id="content">Загрузка...</div>
+
+    <div class="tabs">
+        <div class="tab active" data-tab="stats">Статистика</div>
+        <div class="tab" data-tab="chart">График</div>
+        <div class="tab" data-tab="insights">Аналитика</div>
+    </div>
+
+    <div id="statsTab" class="tab-content active">
+        <div id="videoCard"></div>
+        <div class="nav-buttons">
+            <button id="prevBtn" class="secondary-btn">◀ Назад</button>
+            <button id="nextBtn" class="secondary-btn">Вперёд ▶</button>
+        </div>
+        <div class="filter-group" id="sortGroup">
+            <div class="filter-chip active" data-sort="original">Исходный</div>
+            <div class="filter-chip" data-sort="views">По просмотрам</div>
+            <div class="filter-chip" data-sort="growth">По росту (час)</div>
+        </div>
+        <button id="refreshBtn" class="primary-btn">⟳ Обновить данные</button>
+        <div class="counter" id="videoCounter"></div>
+        <div class="last-update" id="lastUpdateTime"></div>
+    </div>
+
+    <div id="chartTab" class="tab-content">
+        <div class="video-title" id="chartVideoTitle">Выберите видео</div>
+        <div class="chart-container">
+            <canvas id="viewsChart" width="400" height="200"></canvas>
+        </div>
+        <div class="stats-grid" id="chartStats"></div>
+        <button id="refreshChartBtn" class="primary-btn" style="margin-top: 12px;">⟳ Обновить график</button>
+    </div>
+
+    <div id="insightsTab" class="tab-content">
+        <div id="insightsList"></div>
+    </div>
+
+    <div class="footer">
+        <span>lobedron</span> &nbsp;|&nbsp; <span id="version">v2.0</span>
+    </div>
 </div>
 
 <script>
-    // ===== НАСТРОЙКИ =====
+    // ---------- КОНФИГ ----------
     const API_KEY = 'AIzaSyCJQp6Yo_tHBJOQAF5JG-lXN7wsTpVDAXk';
     const VIDEO_URLS = [
         "https://www.youtube.com/watch?v=vhbNHMy9w_8",
@@ -193,99 +316,79 @@
         "https://www.youtube.com/watch?v=38v0Tmc_Oro",
         "https://www.youtube.com/watch?v=w7sYCnbAufY"
     ];
-    // =========================
 
-    let allVideos = [];
-    let currentList = [];
+    let allVideos = [];      // исходный порядок (свежие данные)
+    let currentList = [];    // текущий список для отображения
     let currentIndex = 0;
     let lastUpdateTime = null;
+    let analytics = {};      // хранилище истории просмотров
+    let viewsChart = null;
 
-    // Хранилище для аналитики (в localStorage)
-    let analytics = {};
-
-    function loadAnalytics() {
-        const saved = localStorage.getItem('youtube_analytics');
-        if (saved) {
-            analytics = JSON.parse(saved);
-        } else {
-            analytics = {};
-        }
-    }
-
-    function saveAnalytics() {
-        localStorage.setItem('youtube_analytics', JSON.stringify(analytics));
-    }
-
-    function updateAnalytics(videoId, currentViews) {
-        const now = Date.now();
-        const hour = 60 * 60 * 1000;
-        
-        if (!analytics[videoId]) {
-            analytics[videoId] = {
-                lastViews: currentViews,
-                lastUpdate: now,
-                history: []
-            };
-        } else {
-            const prev = analytics[videoId];
-            const timeDiff = now - prev.lastUpdate;
-            const viewsDiff = currentViews - prev.lastViews;
-            
-            // Сохраняем данные за последний час
-            if (timeDiff >= hour || viewsDiff > 0) {
-                analytics[videoId] = {
-                    lastViews: currentViews,
-                    lastUpdate: now,
-                    history: [{
-                        views: currentViews,
-                        timestamp: now,
-                        diff: viewsDiff,
-                        timeDiff: timeDiff
-                    }, ...(prev.history || []).slice(0, 23)] // храним последние 24 записи
-                };
-            }
-        }
-        saveAnalytics();
-    }
-
-    function getGrowthText(videoId, currentViews) {
-        const data = analytics[videoId];
-        if (!data || !data.history || data.history.length === 0) {
-            return { text: "🆕 Первый замер", class: "new" };
-        }
-        
-        const latest = data.history[0];
-        const hoursDiff = latest.timeDiff / (60 * 60 * 1000);
-        
-        if (latest.diff === undefined || latest.diff === 0) {
-            return { text: "📊 Нет изменений", class: "slow" };
-        }
-        
-        const perHour = Math.round(latest.diff / hoursDiff);
-        
-        if (perHour >= 100) {
-            return { text: `🔥 +${perHour} просмотров/час`, class: "hot" };
-        } else if (perHour >= 20) {
-            return { text: `📈 +${perHour} просмотров/час`, class: "normal" };
-        } else {
-            return { text: `📉 +${perHour} просмотров/час`, class: "slow" };
-        }
-    }
-
+    // ---------- Вспомогательные ----------
     function extractVideoId(url) {
         const match = url.match(/(?:v=|\/)([a-zA-Z0-9_-]{11})/);
         return match ? match[1] : null;
     }
 
+    function formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    }
+
+    function formatTime(timestamp) {
+        if (!timestamp) return "—";
+        const date = new Date(timestamp);
+        return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // ---------- Аналитика (localStorage) ----------
+    function loadAnalytics() {
+        const saved = localStorage.getItem('lob_analytics');
+        if (saved) analytics = JSON.parse(saved);
+        else analytics = {};
+    }
+    function saveAnalytics() {
+        localStorage.setItem('lob_analytics', JSON.stringify(analytics));
+    }
+
+    function updateAnalytics(videoId, currentViews) {
+        const now = Date.now();
+        if (!analytics[videoId]) {
+            analytics[videoId] = { history: [] };
+        }
+        const prev = analytics[videoId];
+        const lastEntry = prev.history[0];
+        // если прошло больше 30 минут или просмотры изменились — добавляем запись
+        if (!lastEntry || (now - lastEntry.timestamp > 30 * 60 * 1000) || lastEntry.views !== currentViews) {
+            prev.history.unshift({
+                views: currentViews,
+                timestamp: now
+            });
+            // оставляем не больше 50 записей
+            if (prev.history.length > 50) prev.history.pop();
+        }
+        saveAnalytics();
+    }
+
+    function getGrowthRate(videoId, currentViews) {
+        const data = analytics[videoId];
+        if (!data || data.history.length < 2) return null;
+        const latest = data.history[0];
+        const prev = data.history[1];
+        const hoursDiff = (latest.timestamp - prev.timestamp) / (60 * 60 * 1000);
+        if (hoursDiff <= 0) return null;
+        const diff = latest.views - prev.views;
+        const perHour = Math.round(diff / hoursDiff);
+        return { perHour, diff, hours: hoursDiff };
+    }
+
+    // ---------- YouTube API ----------
     async function fetchAllVideos() {
         const ids = VIDEO_URLS.map(extractVideoId).filter(id => id);
-        if (!ids.length) throw new Error("Нет корректных ссылок");
-
+        if (!ids.length) throw new Error("Нет ссылок");
         const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${ids.join(',')}&key=${API_KEY}`;
         const res = await fetch(url);
         const data = await res.json();
-        if (!data.items) throw new Error("Ошибка API, проверьте ключ");
-
+        if (!data.items) throw new Error("Ошибка API");
         const now = Date.now();
         const videos = data.items.map(item => ({
             id: item.id,
@@ -296,110 +399,15 @@
             comments: parseInt(item.statistics.commentCount || 0),
             url: `https://youtu.be/${item.id}`
         }));
-        
-        // Обновляем аналитику
-        videos.forEach(v => {
-            updateAnalytics(v.id, v.views);
-        });
-        
+        videos.forEach(v => updateAnalytics(v.id, v.views));
         lastUpdateTime = now;
         return videos;
     }
 
-    function formatNumber(num) {
-        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-    }
-
-    function formatTime() {
-        if (!lastUpdateTime) return "не обновлено";
-        const date = new Date(lastUpdateTime);
-        return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    }
-
-    function render() {
-        const video = currentList[currentIndex];
-        if (!video) {
-            document.getElementById('content').innerHTML = '<div class="error">Нет данных</div>';
-            return;
-        }
-
-        const growth = getGrowthText(video.id, video.views);
-        const total = currentList.length;
-        const html = `
-            <div class="video-card">
-                <img class="thumbnail" src="${video.thumb}" alt="thumbnail" loading="lazy">
-                <div class="title">${escapeHtml(video.title)}</div>
-                <div class="stats">
-                    <div class="stat"><span class="stat-label">👁 Просмотры</span><span class="stat-value">${formatNumber(video.views)}</span></div>
-                    <div class="stat"><span class="stat-label">❤️ Лайки</span><span class="stat-value">${formatNumber(video.likes)}</span></div>
-                    <div class="stat"><span class="stat-label">💬 Комментарии</span><span class="stat-value">${formatNumber(video.comments)}</span></div>
-                    <div class="growth ${growth.class}">${growth.text}</div>
-                </div>
-                <div class="nav-buttons">
-                    <button id="prevBtn" ${currentIndex === 0 ? 'disabled style="opacity:0.5"' : ''}>⬅️ Назад</button>
-                    <button id="nextBtn" ${currentIndex === total-1 ? 'disabled style="opacity:0.5"' : ''}>Вперед ➡️</button>
-                </div>
-                <div class="sort-buttons">
-                    <button id="sortViewsBtn" class="${currentList === allVideos ? '' : 'active'}">📊 По просмотрам</button>
-                    <button id="resetOrderBtn" class="${currentList === allVideos ? 'active' : ''}">🔄 Исходный порядок</button>
-                </div>
-                <button id="refreshBtn" class="refresh-btn">🔄 Обновить данные</button>
-                <button id="resetAnalyticsBtn" class="reset-analytics">🗑️ Сбросить аналитику</button>
-                <div class="counter">${currentIndex+1} / ${total}</div>
-                <div class="last-update">🕒 Последнее обновление: ${formatTime()}</div>
-            </div>
-        `;
-        document.getElementById('content').innerHTML = html;
-
-        document.getElementById('prevBtn')?.addEventListener('click', () => {
-            if (currentIndex > 0) {
-                currentIndex--;
-                render();
-            }
-        });
-        document.getElementById('nextBtn')?.addEventListener('click', () => {
-            if (currentIndex < currentList.length - 1) {
-                currentIndex++;
-                render();
-            }
-        });
-        document.getElementById('sortViewsBtn')?.addEventListener('click', async () => {
-            await refreshData();
-            const sorted = [...allVideos].sort((a,b) => b.views - a.views);
-            currentList = sorted;
-            currentIndex = 0;
-            render();
-        });
-        document.getElementById('resetOrderBtn')?.addEventListener('click', async () => {
-            await refreshData();
-            currentList = allVideos;
-            currentIndex = 0;
-            render();
-        });
-        document.getElementById('refreshBtn')?.addEventListener('click', async () => {
-            await refreshData();
-            currentList = (currentList === allVideos) ? allVideos : [...allVideos].sort((a,b)=>b.views - a.views);
-            currentIndex = 0;
-            render();
-        });
-        document.getElementById('resetAnalyticsBtn')?.addEventListener('click', () => {
-            if (confirm('Сбросить всю аналитику? Данные о скорости набора просмотров будут удалены.')) {
-                analytics = {};
-                saveAnalytics();
-                refreshData().then(() => {
-                    currentList = allVideos;
-                    currentIndex = 0;
-                    render();
-                });
-            }
-        });
-    }
-
     async function refreshData() {
-        const contentDiv = document.getElementById('content');
-        contentDiv.innerHTML = '<div style="text-align:center">⏳ Обновление...</div>';
         try {
             const fresh = await fetchAllVideos();
+            // сохраняем порядок из VIDEO_URLS
             const ordered = [];
             for (let url of VIDEO_URLS) {
                 const id = extractVideoId(url);
@@ -407,23 +415,173 @@
                 if (found) ordered.push(found);
             }
             allVideos = ordered;
-            if (currentList === undefined) currentList = allVideos;
-        } catch (err) {
-            contentDiv.innerHTML = `<div class="error">Ошибка: ${err.message}</div>`;
-            throw err;
+            if (currentList.length === 0) currentList = [...allVideos];
+            else {
+                // сохраняем сортировку (оригинал или по просмотрам)
+                const currentSort = document.querySelector('.filter-chip.active')?.dataset.sort || 'original';
+                if (currentSort === 'views') currentList = [...allVideos].sort((a,b) => b.views - a.views);
+                else if (currentSort === 'growth') {
+                    currentList = [...allVideos].sort((a,b) => {
+                        const gA = getGrowthRate(a.id, a.views)?.perHour || 0;
+                        const gB = getGrowthRate(b.id, b.views)?.perHour || 0;
+                        return gB - gA;
+                    });
+                } else currentList = [...allVideos];
+            }
+            if (currentIndex >= currentList.length) currentIndex = 0;
+            renderCurrentTab();
+        } catch(e) {
+            console.error(e);
+            document.getElementById('videoCard').innerHTML = `<div style="color:#ff8a8a">❌ Ошибка загрузки: ${e.message}</div>`;
         }
     }
 
-    async function init() {
-        loadAnalytics();
-        try {
-            await refreshData();
-            currentList = allVideos;
-            currentIndex = 0;
-            render();
-        } catch (err) {
-            document.getElementById('content').innerHTML = `<div class="error">Не удалось загрузить данные. Проверьте API ключ и ссылки.</div>`;
+    // ---------- Отрисовка основной вкладки ----------
+    function renderStatsTab() {
+        const video = currentList[currentIndex];
+        if (!video) return;
+        const growth = getGrowthRate(video.id, video.views);
+        let growthHtml = '';
+        if (growth) {
+            let cls = 'slow';
+            let text = `📉 ${growth.perHour} просм/час`;
+            if (growth.perHour >= 100) { cls = 'hot'; text = `🔥 ${growth.perHour} просм/час`; }
+            else if (growth.perHour >= 20) { cls = 'normal'; text = `📈 ${growth.perHour} просм/час`; }
+            growthHtml = `<div class="growth-badge ${cls}">${text}</div>`;
+        } else {
+            growthHtml = `<div class="growth-badge new">🆕 первый замер</div>`;
         }
+        const html = `
+            <div class="video-preview">
+                <img class="thumbnail" src="${video.thumb}" alt="preview" loading="lazy">
+                <div class="video-title">${escapeHtml(video.title)}</div>
+                <div class="stats-grid">
+                    <div class="stat-item"><div class="stat-label">ПРОСМОТРЫ</div><div class="stat-number">${formatNumber(video.views)}</div></div>
+                    <div class="stat-item"><div class="stat-label">ЛАЙКИ</div><div class="stat-number">${formatNumber(video.likes)}</div></div>
+                    <div class="stat-item"><div class="stat-label">КОММЕНТАРИИ</div><div class="stat-number">${formatNumber(video.comments)}</div></div>
+                </div>
+                ${growthHtml}
+                <div style="margin-top: 12px;"><a href="${video.url}" target="_blank" style="color:#8a8a8a; font-size:0.75rem;">🔗 Смотреть на YouTube</a></div>
+            </div>
+        `;
+        document.getElementById('videoCard').innerHTML = html;
+        document.getElementById('videoCounter').innerHTML = `${currentIndex+1} / ${currentList.length}`;
+        document.getElementById('lastUpdateTime').innerHTML = `🕒 обновлено: ${formatTime(lastUpdateTime)}`;
+        // кнопки навигации
+        document.getElementById('prevBtn').onclick = () => { if (currentIndex > 0) { currentIndex--; renderStatsTab(); } };
+        document.getElementById('nextBtn').onclick = () => { if (currentIndex < currentList.length-1) { currentIndex++; renderStatsTab(); } };
+    }
+
+    // ---------- График ----------
+    function renderChartTab() {
+        const video = currentList[currentIndex];
+        if (!video) return;
+        document.getElementById('chartVideoTitle').innerText = video.title;
+        const history = analytics[video.id]?.history || [];
+        const points = history.slice().reverse(); // от старых к новым
+        const labels = points.map(p => formatTime(p.timestamp));
+        const data = points.map(p => p.views);
+        const ctx = document.getElementById('viewsChart').getContext('2d');
+        if (viewsChart) viewsChart.destroy();
+        viewsChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Просмотры',
+                    data: data,
+                    borderColor: '#b0b0b0',
+                    backgroundColor: 'rgba(80,80,80,0.2)',
+                    tension: 0.2,
+                    pointRadius: 2,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { labels: { color: '#ccc', font: { size: 10 } } } },
+                scales: { y: { ticks: { color: '#aaa' }, grid: { color: '#2a2a2a' } },
+                          x: { ticks: { color: '#aaa', maxRotation: 45, autoSkip: true } } }
+            }
+        });
+        const lastViews = history[0]?.views || video.views;
+        const firstViews = history[history.length-1]?.views || lastViews;
+        const totalGain = lastViews - firstViews;
+        document.getElementById('chartStats').innerHTML = `
+            <div class="stat-item"><div class="stat-label">ЗА ВЕСЬ ПЕРИОД</div><div class="stat-number">${formatNumber(totalGain)}</div></div>
+            <div class="stat-item"><div class="stat-label">ТЕКУЩИЕ</div><div class="stat-number">${formatNumber(lastViews)}</div></div>
+        `;
+        document.getElementById('refreshChartBtn').onclick = () => refreshData().then(() => renderChartTab());
+    }
+
+    // ---------- Аналитика (список видео с ростом) ----------
+    function renderInsightsTab() {
+        const sorted = [...allVideos].sort((a,b) => {
+            const gA = getGrowthRate(a.id, a.views)?.perHour || 0;
+            const gB = getGrowthRate(b.id, b.views)?.perHour || 0;
+            return gB - gA;
+        });
+        let html = `<div style="font-size:0.8rem; margin-bottom:12px;">📊 Рейтинг по скорости роста (просмотров в час)</div>`;
+        sorted.forEach((v, idx) => {
+            const growth = getGrowthRate(v.id, v.views);
+            let rate = growth ? `${growth.perHour}` : '—';
+            let cls = '';
+            if (growth && growth.perHour >= 100) cls = '🔥';
+            else if (growth && growth.perHour >= 20) cls = '📈';
+            else if (growth) cls = '⏳';
+            html += `<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #2a2a2a;">
+                        <span style="flex:1; font-size:0.85rem;">${idx+1}. ${escapeHtml(v.title.slice(0,45))}</span>
+                        <span style="font-family:monospace;">${cls} ${rate}</span>
+                     </div>`;
+        });
+        document.getElementById('insightsList').innerHTML = html;
+    }
+
+    function renderCurrentTab() {
+        const activeTab = document.querySelector('.tab.active').dataset.tab;
+        if (activeTab === 'stats') renderStatsTab();
+        else if (activeTab === 'chart') renderChartTab();
+        else if (activeTab === 'insights') renderInsightsTab();
+    }
+
+    // ---------- Сортировка ----------
+    function setSort(sortType) {
+        if (sortType === 'original') currentList = [...allVideos];
+        else if (sortType === 'views') currentList = [...allVideos].sort((a,b) => b.views - a.views);
+        else if (sortType === 'growth') currentList = [...allVideos].sort((a,b) => {
+            const gA = getGrowthRate(a.id, a.views)?.perHour || 0;
+            const gB = getGrowthRate(b.id, b.views)?.perHour || 0;
+            return gB - gA;
+        });
+        currentIndex = 0;
+        renderCurrentTab();
+    }
+
+    // ---------- Инициализация ----------
+    function init() {
+        loadAnalytics();
+        refreshData().then(() => {
+            // обработчики вкладок
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    document.getElementById(`${tab.dataset.tab}Tab`).classList.add('active');
+                    renderCurrentTab();
+                });
+            });
+            // сортировка
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    setSort(chip.dataset.sort);
+                });
+            });
+            document.getElementById('refreshBtn').onclick = () => refreshData().then(() => renderCurrentTab());
+        });
     }
 
     function escapeHtml(str) {
