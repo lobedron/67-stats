@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Lob Analytics — Feed</title>
+    <title>Lob Analytics — Creative Studio</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     
     <style>
+        /* ... все стили остаются такими же, как в прошлом рабочем варианте ... */
+        /* (я оставлю их без изменений, чтобы не загромождать ответ, но в финальном коде они будут полностью) */
         :root {
             --bg: #050505;
             --card-bg: #111111;
@@ -17,225 +19,51 @@
             --text-secondary: #888888;
             --glass: rgba(20, 20, 20, 0.7);
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            background-color: var(--bg);
-            color: #efefef;
-            font-family: 'Manrope', sans-serif;
-            overflow-x: hidden;
-        }
-
-        /* Шапка */
-        .app-header {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .channel-pfp {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 1px solid var(--border);
-        }
-
-        .header-info h1 {
-            font-size: 0.9rem;
-            font-weight: 700;
-            letter-spacing: -0.2px;
-        }
-
-        .header-info p {
-            font-size: 0.7rem;
-            color: var(--text-secondary);
-        }
-
-        /* Лента видео */
-        .feed-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 20px;
-            padding: 20px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .video-card {
-            background: var(--card-bg);
-            border-radius: 20px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            cursor: pointer;
-            /* Плавные анимации для карточек */
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-                        box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-                        border-color 0.3s ease;
-        }
-
-        .video-card:hover {
-            transform: translateY(-6px);
-            border-color: #444;
-            /* Легкое беловатое свечение */
-            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.08);
-        }
-
-        .video-card:active {
-            transform: scale(0.98);
-        }
-
-        .thumb-box {
-            position: relative;
-            aspect-ratio: 16/9;
-            background: #1a1a1a;
-        }
-
-        .thumb-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .card-content {
-            padding: 14px;
-        }
-
-        .video-title {
-            font-size: 0.95rem;
-            font-weight: 500;
-            line-height: 1.4;
-            margin-bottom: 10px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .card-stats {
-            display: flex;
-            gap: 12px;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-        }
-
-        /* Детальное окно (Модалка) */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--bg);
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            
-            /* Анимация появления модалки */
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-
-        .modal.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        .modal-nav {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .close-modal {
-            background: #222;
-            border: none;
-            color: #fff;
-            padding: 8px 16px;
-            border-radius: 30px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .close-modal:hover {
-            background: #333;
-            /* Тень для кнопки закрытия */
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
-        }
-
-        .modal-body {
-            padding: 20px;
-            max-width: 700px;
-            margin: 0 auto;
-            width: 100%;
-            
-            /* Анимация выезда контента снизу вверх */
-            transform: translateY(30px);
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .modal.active .modal-body {
-            transform: translateY(0);
-        }
-
-        .detail-chart-box {
-            background: #0a0a0a;
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 16px;
-            margin: 20px 0;
-        }
-
-        .stat-grid-detail {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-
-        .stat-pill {
-            background: var(--card-bg);
-            padding: 16px;
-            border-radius: 18px;
-            border: 1px solid var(--border);
-        }
-
-        .stat-pill .label { font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px; }
-        .stat-pill .value { font-size: 1.1rem; font-weight: 700; }
-
-        .growth-indicator {
-            display: inline-block;
-            margin: 10px 0;
-            padding: 6px 12px;
-            border-radius: 10px;
-            font-size: 0.8rem;
-            font-weight: 700;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg); color: #efefef; font-family: 'Manrope', sans-serif; overflow-x: hidden; }
+        .app-header { position: sticky; top: 0; z-index: 100; background: var(--glass); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; align-items: center; justify-content: center; gap: 12px; text-align: center; }
+        .channel-pfp { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); }
+        .header-info h1 { font-size: 0.9rem; font-weight: 700; letter-spacing: -0.2px; }
+        .header-info p { font-size: 0.7rem; color: var(--text-secondary); }
+        .sort-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 20px; background: rgba(5, 5, 5, 0.6); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); position: sticky; top: 60px; z-index: 90; }
+        .sort-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 6px 16px; border-radius: 40px; font-size: 0.75rem; font-weight: 500; font-family: 'Manrope', sans-serif; cursor: pointer; transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1); backdrop-filter: blur(4px); display: inline-flex; align-items: center; gap: 6px; position: relative; overflow: hidden; }
+        .sort-btn:active { transform: scale(0.94); transition: transform 0.1s; }
+        .sort-btn::after { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; border-radius: 50%; background: rgba(255,255,255,0.2); transform: translate(-50%, -50%); transition: width 0.4s ease-out, height 0.4s ease-out; }
+        .sort-btn:active::after { width: 100px; height: 100px; opacity: 0; }
+        .sort-btn:hover { border-color: #555; color: #eee; transform: translateY(-1px); }
+        .sort-btn.active { background: rgba(255, 255, 255, 0.1); border-color: #aaa; color: white; box-shadow: 0 0 8px rgba(255, 255, 255, 0.1); }
+        .sort-arrow { display: inline-block; transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1), opacity 0.15s; font-size: 0.7rem; }
+        .feed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; padding: 20px; max-width: 1400px; margin: 0 auto; }
+        .video-card { background: var(--card-bg); border-radius: 20px; overflow: hidden; border: 1px solid var(--border); cursor: pointer; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease; animation: cardFadeIn 0.4s ease-out; }
+        @keyframes cardFadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .video-card:hover { transform: translateY(-6px); border-color: #444; box-shadow: 0 10px 30px rgba(255, 255, 255, 0.08); }
+        .video-card:active { transform: scale(0.98); }
+        .thumb-box { position: relative; aspect-ratio: 16/9; background: #1a1a1a; }
+        .thumb-box img { width: 100%; height: 100%; object-fit: cover; }
+        .card-content { padding: 14px; }
+        .video-title { font-size: 0.95rem; font-weight: 500; line-height: 1.4; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .card-stats { display: flex; gap: 12px; font-size: 0.75rem; color: var(--text-secondary); }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; overflow-y: auto; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        .modal.active { opacity: 1; pointer-events: all; }
+        .modal-nav { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .close-modal { background: #222; border: none; color: #fff; padding: 8px 16px; border-radius: 30px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+        .close-modal:hover { background: #333; box-shadow: 0 0 15px rgba(255, 255, 255, 0.15); }
+        .modal-body { padding: 20px; max-width: 700px; margin: 0 auto; width: 100%; transform: translateY(30px); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .modal.active .modal-body { transform: translateY(0); }
+        .detail-chart-box { background: #0a0a0a; border: 1px solid var(--border); border-radius: 24px; padding: 16px; margin: 20px 0; }
+        .stat-grid-detail { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .stat-pill { background: var(--card-bg); padding: 16px 12px; border-radius: 18px; border: 1px solid var(--border); text-align: center; }
+        .stat-pill .label { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .stat-pill .value { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
+        .extra-metrics { margin-top: 16px; background: #0a0a0a; border-radius: 20px; padding: 16px 12px; border: 1px solid var(--border); display: flex; justify-content: space-around; flex-wrap: wrap; gap: 16px; text-align: center; }
+        .metric-item { flex: 1; min-width: 100px; }
+        .metric-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 6px; }
+        .metric-value { font-size: 1.2rem; font-weight: 700; color: #fff; }
+        .detail-growth { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 10px 0; }
+        .growth-indicator { display: inline-block; padding: 6px 14px; border-radius: 30px; font-size: 0.75rem; font-weight: 700; text-align: center; }
         .up { background: #1a2e1a; color: #4ade80; }
         .neutral { background: #1a1a2e; color: #60a5fa; }
-
-        @media (max-width: 600px) {
-            .feed-grid { grid-template-columns: 1fr; padding: 12px; }
-            .stat-grid-detail { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 600px) { .feed-grid { grid-template-columns: 1fr; padding: 12px; } .stat-grid-detail { grid-template-columns: 1fr; } .sort-bar { top: 57px; padding: 10px 16px; } .sort-btn { padding: 5px 12px; font-size: 0.7rem; } .stat-pill .value { font-size: 1.3rem; } .extra-metrics { flex-direction: column; align-items: center; } }
     </style>
 </head>
 <body>
@@ -248,8 +76,15 @@
     </div>
 </header>
 
-<main class="feed-grid" id="videoFeed">
-    </main>
+<div class="sort-bar" id="sortBar">
+    <button class="sort-btn" data-sort="views">👁 Просмотры <span class="sort-arrow">▼</span></button>
+    <button class="sort-btn" data-sort="likes">👍 Лайки <span class="sort-arrow">▼</span></button>
+    <button class="sort-btn" data-sort="comments">💬 Комментарии <span class="sort-arrow">▼</span></button>
+    <button class="sort-btn" data-sort="growth24">⚡ Прирост (24ч) <span class="sort-arrow">▼</span></button>
+    <button class="sort-btn" data-sort="date">📅 Дата <span class="sort-arrow">▼</span></button>
+</div>
+
+<main class="feed-grid" id="videoFeed"></main>
 
 <div class="modal" id="detailModal">
     <div class="modal-nav">
@@ -258,16 +93,13 @@
     </div>
     <div class="modal-body">
         <div id="detailThumb" style="width:100%; border-radius:20px; overflow:hidden; margin-bottom:20px;"></div>
-        <h2 id="detailTitle" style="font-size: 1.3rem; line-height: 1.3; margin-bottom: 10px;"></h2>
-        
-        <div id="detailGrowth"></div>
-
+        <h2 id="detailTitle" style="font-size: 1.3rem; line-height: 1.3; margin-bottom: 10px; text-align: center;"></h2>
+        <div id="detailGrowth" class="detail-growth"></div>
         <div class="detail-chart-box">
             <canvas id="mainChart"></canvas>
         </div>
-
         <div class="stat-grid-detail" id="detailGrid"></div>
-
+        <div id="extraMetrics" class="extra-metrics"></div>
         <a id="ytLink" href="" target="_blank" style="display: block; text-align: center; margin-top: 30px; color: #666; text-decoration: none; font-size: 0.8rem; transition: color 0.3s ease;">Смотреть на YouTube оригинал</a>
     </div>
 </div>
@@ -279,47 +111,61 @@
     let allVideos = [];
     let analyticsData = JSON.parse(localStorage.getItem('lob_analytics_v3') || '{}');
     let activeChart = null;
+    
+    let sortOrders = {
+        views: true,
+        likes: true,
+        comments: true,
+        growth24: true,
+        date: true
+    };
+    let currentSort = 'date';
 
-    // Функция для расчета месяцев и дней
+    function getGrowth24(videoId) {
+        const history = analyticsData[videoId]?.history || [];
+        if (history.length < 2) return 0;
+        const now = Date.now();
+        const dayAgo = now - 24 * 3600000;
+        let oldestWithin24h = history[0];
+        let newestBefore24h = null;
+        for (let i = 1; i < history.length; i++) {
+            if (history[i].timestamp <= dayAgo) {
+                newestBefore24h = history[i];
+                break;
+            }
+        }
+        if (!newestBefore24h) return history[0].views - (history[1]?.views || history[0].views);
+        return oldestWithin24h.views - newestBefore24h.views;
+    }
+
     function timeAgo(dateString) {
         const date = new Date(dateString);
         const now = new Date();
         const diffTime = Math.abs(now - date);
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
         if (diffDays === 0) return "Сегодня";
-        
         const months = Math.floor(diffDays / 30);
         const days = diffDays % 30;
-        
-        // Склонение слов
         function getPlural(number, words) {
             return words[(number % 100 > 4 && number % 100 < 20) ? 2 : [2, 0, 1, 1, 1, 2][(number % 10 < 5) ? Math.abs(number) % 10 : 5]];
         }
-
         let res = [];
         if (months > 0) res.push(`${months} ${getPlural(months, ['месяц', 'месяца', 'месяцев'])}`);
         if (days > 0) res.push(`${days} ${getPlural(days, ['день', 'дня', 'дней'])}`);
-        
         return res.join(' и ') + ' назад';
     }
 
     async function loadApp() {
         try {
-            // 1. Получаем данные канала
             const channelRes = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&forHandle=${HANDLE}&key=${API_KEY}`);
             const channelData = await channelRes.json();
             const channel = channelData.items[0];
-            
             document.getElementById('chName').innerText = channel.snippet.title;
-            // Изменили "сабов" на "подписчиков"
             document.getElementById('chMeta').innerText = `@${HANDLE} • ${parseInt(channel.statistics.subscriberCount).toLocaleString('ru-RU')} подписчиков`;
 
-            // 2. Получаем видео
             const uploadId = channel.contentDetails.relatedPlaylists.uploads;
             const videoListRes = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadId}&maxResults=48&key=${API_KEY}`);
             const videoListData = await videoListRes.json();
-            
             const ids = videoListData.items.map(i => i.snippet.resourceId.videoId);
             const statsRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${ids.join(',')}&key=${API_KEY}`);
             const statsData = await statsRes.json();
@@ -331,10 +177,7 @@
                 const id = item.snippet.resourceId.videoId;
                 const vStats = statsMap[id] || {};
                 const thumbs = item.snippet.thumbnails;
-                
-                // Исправлен баг с превью: ищем максимальное доступное качество
                 const bestThumb = thumbs?.maxres?.url || thumbs?.standard?.url || thumbs?.high?.url || thumbs?.medium?.url || thumbs?.default?.url || '';
-
                 const videoObj = {
                     id: id,
                     title: item.snippet.title,
@@ -342,13 +185,21 @@
                     views: parseInt(vStats.viewCount || 0),
                     likes: parseInt(vStats.likeCount || 0),
                     comments: parseInt(vStats.commentCount || 0),
-                    date: item.snippet.publishedAt
+                    date: item.snippet.publishedAt,
+                    growth24: 0
                 };
                 track(id, videoObj.views);
                 return videoObj;
             });
 
+            allVideos.forEach(v => {
+                v.growth24 = getGrowth24(v.id);
+            });
+
+            sortVideos('date', true);
             renderFeed();
+            updateArrows('date', true);
+            highlightSortButton('date');
         } catch (e) {
             console.error(e);
             document.getElementById('chMeta').innerText = "Ошибка загрузки API";
@@ -366,22 +217,104 @@
         }
     }
 
+    function sortVideos(criteria, descending) {
+        if (criteria === 'views') {
+            allVideos.sort((a, b) => descending ? b.views - a.views : a.views - b.views);
+        } else if (criteria === 'likes') {
+            allVideos.sort((a, b) => descending ? b.likes - a.likes : a.likes - b.likes);
+        } else if (criteria === 'comments') {
+            allVideos.sort((a, b) => descending ? b.comments - a.comments : a.comments - b.comments);
+        } else if (criteria === 'growth24') {
+            allVideos.sort((a, b) => descending ? b.growth24 - a.growth24 : a.growth24 - b.growth24);
+        } else if (criteria === 'date') {
+            allVideos.sort((a, b) => descending ? new Date(b.date) - new Date(a.date) : new Date(a.date) - new Date(b.date));
+        }
+        currentSort = criteria;
+        sortOrders[criteria] = descending;
+    }
+
     function renderFeed() {
         const feed = document.getElementById('videoFeed');
-        feed.innerHTML = allVideos.map(v => `
-            <div class="video-card" onclick="openDetails('${v.id}')">
-                <div class="thumb-box">
-                    <img src="${v.thumb}" loading="lazy">
-                </div>
-                <div class="card-content">
-                    <div class="video-title">${v.title}</div>
-                    <div class="card-stats">
-                        <span>👁 ${v.views.toLocaleString('ru-RU')}</span>
-                        <span>👍 ${v.likes.toLocaleString('ru-RU')}</span>
+        feed.style.opacity = '0';
+        setTimeout(() => {
+            feed.innerHTML = allVideos.map(v => `
+                <div class="video-card" onclick="openDetails('${v.id}')">
+                    <div class="thumb-box">
+                        <img src="${v.thumb}" loading="lazy">
+                    </div>
+                    <div class="card-content">
+                        <div class="video-title">${escapeHtml(v.title)}</div>
+                        <div class="card-stats">
+                            <span>👁 ${v.views.toLocaleString('ru-RU')}</span>
+                            <span>👍 ${v.likes.toLocaleString('ru-RU')}</span>
+                            <span>💬 ${v.comments.toLocaleString('ru-RU')}</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `).join('');
+            `).join('');
+            feed.style.opacity = '1';
+        }, 50);
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    // Улучшенная функция обновления стрелки с гарантированной анимацией при любом клике
+    function updateArrows(criteria, descending) {
+        const btn = document.querySelector(`.sort-btn[data-sort="${criteria}"]`);
+        if (!btn) return;
+        const arrowSpan = btn.querySelector('.sort-arrow');
+        if (arrowSpan) {
+            // ВСЕГДА проигрываем анимацию (сжатие и возврат)
+            arrowSpan.style.transform = 'scale(0.7)';
+            arrowSpan.style.opacity = '0.5';
+            setTimeout(() => {
+                // Меняем символ на нужный (даже если он такой же — не страшно)
+                arrowSpan.textContent = descending ? '▼' : '▲';
+                arrowSpan.style.transform = 'scale(1)';
+                arrowSpan.style.opacity = '1';
+            }, 80);
+        }
+    }
+
+    function highlightSortButton(activeSort) {
+        document.querySelectorAll('.sort-btn').forEach(btn => {
+            const sortVal = btn.getAttribute('data-sort');
+            if (sortVal === activeSort) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    function setupSorting() {
+        const sortTypes = ['views', 'likes', 'comments', 'growth24', 'date'];
+        sortTypes.forEach(type => {
+            const btn = document.querySelector(`.sort-btn[data-sort="${type}"]`);
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    let newDescending;
+                    if (currentSort === type) {
+                        // Тот же критерий — переключаем направление
+                        newDescending = !sortOrders[type];
+                    } else {
+                        // Новый критерий — ставим убывание (▼)
+                        newDescending = true;
+                    }
+                    sortVideos(type, newDescending);
+                    renderFeed();
+                    updateArrows(type, newDescending);
+                    highlightSortButton(type);
+                });
+            }
+        });
     }
 
     function openDetails(id) {
@@ -392,26 +325,69 @@
         document.getElementById('detailThumb').innerHTML = `<img src="${v.thumb}" style="width:100%; display:block;">`;
         document.getElementById('ytLink').href = `https://youtu.be/${id}`;
         
-        const growthBox = document.getElementById('detailGrowth');
+        let growthHtml = '';
         if (history.length > 1) {
             const last = history[0];
             const prev = history[1];
             const diff = last.views - prev.views;
             const hrs = (last.timestamp - prev.timestamp) / 3600000;
             const rate = Math.round(diff / (hrs || 1));
-            growthBox.innerHTML = `<div class="growth-indicator up">🔥 +${rate} просм / час</div>`;
+            growthHtml += `<div class="growth-indicator up">🔥 +${rate} просм / час</div>`;
         } else {
-            growthBox.innerHTML = `<div class="growth-indicator neutral">⏳ Накопление данных...</div>`;
+            growthHtml += `<div class="growth-indicator neutral">⏳ Накопление данных...</div>`;
         }
+        const growth24 = v.growth24;
+        if (growth24 > 0) {
+            growthHtml += `<div class="growth-indicator up">📈 +${growth24.toLocaleString('ru-RU')} за 24ч</div>`;
+        } else if (growth24 < 0) {
+            growthHtml += `<div class="growth-indicator neutral">📉 ${growth24.toLocaleString('ru-RU')} за 24ч</div>`;
+        } else {
+            growthHtml += `<div class="growth-indicator neutral">⏳ нет данных за 24ч</div>`;
+        }
+        document.getElementById('detailGrowth').innerHTML = growthHtml;
 
-        // Заменили просто дату на человекопонятный формат
+        const publishedDate = new Date(v.date);
+        const fullDate = publishedDate.toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' });
         const publishedText = timeAgo(v.date);
+        
+        const engagementLikes = ((v.likes / v.views) * 100).toFixed(2);
+        const commentsPerThousand = ((v.comments / v.views) * 1000).toFixed(2);
 
         document.getElementById('detailGrid').innerHTML = `
-            <div class="stat-pill"><div class="label">Всего просмотров</div><div class="value">${v.views.toLocaleString('ru-RU')}</div></div>
-            <div class="stat-pill"><div class="label">Лайки</div><div class="value">${v.likes.toLocaleString('ru-RU')}</div></div>
-            <div class="stat-pill"><div class="label">Комментарии</div><div class="value">${v.comments.toLocaleString('ru-RU')}</div></div>
-            <div class="stat-pill"><div class="label">Опубликовано</div><div class="value" style="font-size: 0.95rem;">${publishedText}</div></div>
+            <div class="stat-pill">
+                <div class="label">Всего просмотров</div>
+                <div class="value">${v.views.toLocaleString('ru-RU')}</div>
+            </div>
+            <div class="stat-pill">
+                <div class="label">Лайки</div>
+                <div class="value">${v.likes.toLocaleString('ru-RU')}</div>
+            </div>
+            <div class="stat-pill">
+                <div class="label">Комментарии</div>
+                <div class="value">${v.comments.toLocaleString('ru-RU')}</div>
+            </div>
+            <div class="stat-pill">
+                <div class="label">Опубликовано</div>
+                <div class="value" style="font-size: 1.1rem; line-height: 1.3;">
+                    ${publishedText}<br>
+                    <span style="font-size: 0.8rem; color: var(--text-secondary);">${fullDate}</span>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('extraMetrics').innerHTML = `
+            <div class="metric-item">
+                <div class="metric-label">❤️ Лайки / просмотры</div>
+                <div class="metric-value">${engagementLikes}%</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-label">💬 Комм. на 1к просм.</div>
+                <div class="metric-value">${commentsPerThousand}</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-label">⚡ Прирост за 24ч</div>
+                <div class="metric-value">${growth24 > 0 ? '+' : ''}${growth24.toLocaleString('ru-RU')}</div>
+            </div>
         `;
 
         document.getElementById('detailModal').classList.add('active');
@@ -455,8 +431,9 @@
         document.body.style.overflow = 'auto';
     }
 
-    loadApp();
+    loadApp().then(() => {
+        setupSorting();
+    });
 </script>
-
 </body>
 </html>
