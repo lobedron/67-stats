@@ -9,8 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     
     <style>
-        /* ... все стили остаются такими же, как в прошлом рабочем варианте ... */
-        /* (я оставлю их без изменений, чтобы не загромождать ответ, но в финальном коде они будут полностью) */
         :root {
             --bg: #050505;
             --card-bg: #111111;
@@ -19,54 +17,543 @@
             --text-secondary: #888888;
             --glass: rgba(20, 20, 20, 0.7);
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg); color: #efefef; font-family: 'Manrope', sans-serif; overflow-x: hidden; }
-        .app-header { position: sticky; top: 0; z-index: 100; background: var(--glass); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; align-items: center; justify-content: center; gap: 12px; text-align: center; }
-        .channel-pfp { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); }
-        .header-info h1 { font-size: 0.9rem; font-weight: 700; letter-spacing: -0.2px; }
-        .header-info p { font-size: 0.7rem; color: var(--text-secondary); }
-        .sort-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 20px; background: rgba(5, 5, 5, 0.6); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); position: sticky; top: 60px; z-index: 90; }
-        .sort-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 6px 16px; border-radius: 40px; font-size: 0.75rem; font-weight: 500; font-family: 'Manrope', sans-serif; cursor: pointer; transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1); backdrop-filter: blur(4px); display: inline-flex; align-items: center; gap: 6px; position: relative; overflow: hidden; }
-        .sort-btn:active { transform: scale(0.94); transition: transform 0.1s; }
-        .sort-btn::after { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; border-radius: 50%; background: rgba(255,255,255,0.2); transform: translate(-50%, -50%); transition: width 0.4s ease-out, height 0.4s ease-out; }
-        .sort-btn:active::after { width: 100px; height: 100px; opacity: 0; }
-        .sort-btn:hover { border-color: #555; color: #eee; transform: translateY(-1px); }
-        .sort-btn.active { background: rgba(255, 255, 255, 0.1); border-color: #aaa; color: white; box-shadow: 0 0 8px rgba(255, 255, 255, 0.1); }
-        .sort-arrow { display: inline-block; transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1), opacity 0.15s; font-size: 0.7rem; }
-        .feed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; padding: 20px; max-width: 1400px; margin: 0 auto; }
-        .video-card { background: var(--card-bg); border-radius: 20px; overflow: hidden; border: 1px solid var(--border); cursor: pointer; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease; animation: cardFadeIn 0.4s ease-out; }
-        @keyframes cardFadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        .video-card:hover { transform: translateY(-6px); border-color: #444; box-shadow: 0 10px 30px rgba(255, 255, 255, 0.08); }
-        .video-card:active { transform: scale(0.98); }
-        .thumb-box { position: relative; aspect-ratio: 16/9; background: #1a1a1a; }
-        .thumb-box img { width: 100%; height: 100%; object-fit: cover; }
-        .card-content { padding: 14px; }
-        .video-title { font-size: 0.95rem; font-weight: 500; line-height: 1.4; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .card-stats { display: flex; gap: 12px; font-size: 0.75rem; color: var(--text-secondary); }
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; overflow-y: auto; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
-        .modal.active { opacity: 1; pointer-events: all; }
-        .modal-nav { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-        .close-modal { background: #222; border: none; color: #fff; padding: 8px 16px; border-radius: 30px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
-        .close-modal:hover { background: #333; box-shadow: 0 0 15px rgba(255, 255, 255, 0.15); }
-        .modal-body { padding: 20px; max-width: 700px; margin: 0 auto; width: 100%; transform: translateY(30px); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .modal.active .modal-body { transform: translateY(0); }
-        .detail-chart-box { background: #0a0a0a; border: 1px solid var(--border); border-radius: 24px; padding: 16px; margin: 20px 0; }
-        .stat-grid-detail { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .stat-pill { background: var(--card-bg); padding: 16px 12px; border-radius: 18px; border: 1px solid var(--border); text-align: center; }
-        .stat-pill .label { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-        .stat-pill .value { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
-        .extra-metrics { margin-top: 16px; background: #0a0a0a; border-radius: 20px; padding: 16px 12px; border: 1px solid var(--border); display: flex; justify-content: space-around; flex-wrap: wrap; gap: 16px; text-align: center; }
-        .metric-item { flex: 1; min-width: 100px; }
-        .metric-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 6px; }
-        .metric-value { font-size: 1.2rem; font-weight: 700; color: #fff; }
-        .detail-growth { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 10px 0; }
-        .growth-indicator { display: inline-block; padding: 6px 14px; border-radius: 30px; font-size: 0.75rem; font-weight: 700; text-align: center; }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: #efefef;
+            font-family: 'Manrope', sans-serif;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Фоновые звёзды */
+        .stars-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .star {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            filter: blur(2px);
+            animation: floatStar linear infinite;
+        }
+        @keyframes floatStar {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.8;
+            }
+            90% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(20px);
+                opacity: 0;
+            }
+        }
+
+        /* Контент поверх фона */
+        .app-header, .sort-bar, .feed-grid, .modal {
+            position: relative;
+            z-index: 1;
+        }
+
+        .app-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-align: center;
+        }
+
+        .channel-pfp {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--border);
+        }
+
+        .header-info h1 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: -0.2px;
+        }
+
+        .header-info p {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        .sort-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 12px 20px;
+            background: rgba(5, 5, 5, 0.6);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 60px;
+            z-index: 90;
+        }
+
+        .sort-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            font-family: 'Manrope', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            backdrop-filter: blur(4px);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .reset-btn {
+            background: rgba(255,255,255,0.05);
+            border-color: #444;
+        }
+        .reset-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .sort-btn:active {
+            transform: scale(0.94);
+            transition: transform 0.1s;
+        }
+
+        .sort-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.4s ease-out, height 0.4s ease-out;
+        }
+
+        .sort-btn:active::after {
+            width: 100px;
+            height: 100px;
+            opacity: 0;
+        }
+
+        .sort-btn:hover {
+            border-color: #555;
+            color: #eee;
+            transform: translateY(-1px);
+        }
+
+        .sort-btn.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #aaa;
+            color: white;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+        }
+
+        .sort-arrow {
+            display: inline-block;
+            transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1), opacity 0.15s;
+            font-size: 0.7rem;
+        }
+
+        .feed-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .video-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                        box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                        border-color 0.3s ease;
+            animation: cardFadeIn 0.4s ease-out;
+        }
+
+        @keyframes cardFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .video-card:hover {
+            transform: translateY(-6px);
+            border-color: #444;
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.08);
+        }
+
+        .video-card:active {
+            transform: scale(0.98);
+        }
+
+        .thumb-box {
+            position: relative;
+            aspect-ratio: 16/9;
+            background: #1a1a1a;
+        }
+
+        .thumb-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-content {
+            padding: 14px;
+        }
+
+        .video-title {
+            font-size: 0.95rem;
+            font-weight: 500;
+            line-height: 1.4;
+            margin-bottom: 10px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-stats {
+            display: flex;
+            gap: 12px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-nav {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .close-modal {
+            background: #222;
+            border: none;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-modal:hover {
+            background: #333;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
+        }
+
+        .modal-body {
+            padding: 20px;
+            max-width: 700px;
+            margin: 0 auto;
+            width: 100%;
+            transform: translateY(30px);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal.active .modal-body {
+            transform: translateY(0);
+        }
+
+        .detail-tabs {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 16px 0 10px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 6px 16px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .tab-panel {
+            margin-top: 16px;
+        }
+
+        .detail-chart-box {
+            background: #0a0a0a;
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+
+        .stat-grid-detail {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .stat-pill {
+            background: var(--card-bg);
+            padding: 16px 12px;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .stat-pill .label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .stat-pill .value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+        }
+
+        .extra-metrics {
+            margin-top: 16px;
+            background: #0a0a0a;
+            border-radius: 20px;
+            padding: 16px 12px;
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 16px;
+            text-align: center;
+        }
+
+        .metric-item {
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .metric-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .metric-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .detail-growth {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .growth-indicator {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
         .up { background: #1a2e1a; color: #4ade80; }
         .neutral { background: #1a1a2e; color: #60a5fa; }
-        @media (max-width: 600px) { .feed-grid { grid-template-columns: 1fr; padding: 12px; } .stat-grid-detail { grid-template-columns: 1fr; } .sort-bar { top: 57px; padding: 10px 16px; } .sort-btn { padding: 5px 12px; font-size: 0.7rem; } .stat-pill .value { font-size: 1.3rem; } .extra-metrics { flex-direction: column; align-items: center; } }
+
+        .comments-list, .favorites-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+        .comment-item, .favorite-item {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 14px;
+            border: 1px solid var(--border);
+            transition: 0.2s;
+            position: relative;
+        }
+        .comment-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .comment-author-img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .comment-author-name {
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .comment-date {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-left: auto;
+        }
+        .comment-text {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 8px;
+            word-break: break-word;
+        }
+        .comment-likes {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .fav-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: transparent;
+            border: none;
+            color: #aaa;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .fav-btn:hover {
+            color: gold;
+            transform: scale(1.1);
+        }
+        .fav-btn.active {
+            color: gold;
+        }
+        .remove-fav-btn {
+            background: #222;
+            border: none;
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .load-more-btn {
+            background: #222;
+            border: none;
+            color: white;
+            padding: 10px;
+            width: 100%;
+            border-radius: 30px;
+            margin-top: 16px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .load-more-btn:hover {
+            background: #333;
+        }
+        .loading, .error {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 600px) {
+            .feed-grid { grid-template-columns: 1fr; padding: 12px; }
+            .stat-grid-detail { grid-template-columns: 1fr; }
+            .sort-bar { top: 57px; padding: 10px 16px; }
+            .sort-btn { padding: 5px 12px; font-size: 0.7rem; }
+            .stat-pill .value { font-size: 1.3rem; }
+            .extra-metrics { flex-direction: column; align-items: center; }
+        }
     </style>
 </head>
 <body>
+
+<!-- Фон со звёздами -->
+<div class="stars-bg" id="starsBg"></div>
 
 <header class="app-header">
     <img src="https://yt3.googleusercontent.com/B1IMRSl53O2y-wYM6ZgrOJTextnb0UksTOC40PhD_eNDi0tuZHa7Xs8-Kfd0T-tmfv-oJ5rV=s160-c-k-c0x00ffffff-no-rj" id="chAvatar" class="channel-pfp" alt="">
@@ -82,6 +569,7 @@
     <button class="sort-btn" data-sort="comments">💬 Комментарии <span class="sort-arrow">▼</span></button>
     <button class="sort-btn" data-sort="growth24">⚡ Прирост (24ч) <span class="sort-arrow">▼</span></button>
     <button class="sort-btn" data-sort="date">📅 Дата <span class="sort-arrow">▼</span></button>
+    <button class="sort-btn reset-btn" id="resetFilters">🔄 Сброс</button>
 </div>
 
 <main class="feed-grid" id="videoFeed"></main>
@@ -95,12 +583,31 @@
         <div id="detailThumb" style="width:100%; border-radius:20px; overflow:hidden; margin-bottom:20px;"></div>
         <h2 id="detailTitle" style="font-size: 1.3rem; line-height: 1.3; margin-bottom: 10px; text-align: center;"></h2>
         <div id="detailGrowth" class="detail-growth"></div>
-        <div class="detail-chart-box">
-            <canvas id="mainChart"></canvas>
+
+        <div class="detail-tabs">
+            <button class="tab-btn active" data-tab="stats">📊 Статистика</button>
+            <button class="tab-btn" data-tab="comments">💬 Комментарии</button>
+            <button class="tab-btn" data-tab="favorites">⭐ Избранное</button>
         </div>
-        <div class="stat-grid-detail" id="detailGrid"></div>
-        <div id="extraMetrics" class="extra-metrics"></div>
-        <a id="ytLink" href="" target="_blank" style="display: block; text-align: center; margin-top: 30px; color: #666; text-decoration: none; font-size: 0.8rem; transition: color 0.3s ease;">Смотреть на YouTube оригинал</a>
+
+        <div id="statsPanel" class="tab-panel active">
+            <div class="detail-chart-box">
+                <canvas id="mainChart"></canvas>
+            </div>
+            <div class="stat-grid-detail" id="detailGrid"></div>
+            <div id="extraMetrics" class="extra-metrics"></div>
+        </div>
+
+        <div id="commentsPanel" class="tab-panel" style="display: none;">
+            <div id="commentsList" class="comments-list"></div>
+            <button id="loadMoreComments" class="load-more-btn" style="display: none;">Загрузить ещё</button>
+        </div>
+
+        <div id="favoritesPanel" class="tab-panel" style="display: none;">
+            <div id="favoritesList" class="favorites-list"></div>
+        </div>
+
+        <a id="ytLink" href="" target="_blank" style="display: block; text-align: center; margin-top: 30px; color: #666; text-decoration: none; font-size: 0.8rem;">Смотреть на YouTube оригинал</a>
     </div>
 </div>
 
@@ -120,6 +627,177 @@
         date: true
     };
     let currentSort = 'date';
+    let currentVideoId = null;
+    let currentCommentsPageToken = null;
+
+    // Избранное
+    let favorites = JSON.parse(localStorage.getItem('lob_favorites') || '[]');
+
+    function saveFavorites() {
+        localStorage.setItem('lob_favorites', JSON.stringify(favorites));
+        renderFavoritesList();
+    }
+
+    function addToFavorite(commentData) {
+        if (!favorites.some(fav => fav.id === commentData.id)) {
+            favorites.push(commentData);
+            saveFavorites();
+        }
+    }
+
+    function removeFromFavorite(commentId) {
+        favorites = favorites.filter(fav => fav.id !== commentId);
+        saveFavorites();
+    }
+
+    function isFavorite(commentId) {
+        return favorites.some(fav => fav.id === commentId);
+    }
+
+    function renderFavoritesList() {
+        const container = document.getElementById('favoritesList');
+        if (!container) return;
+        if (favorites.length === 0) {
+            container.innerHTML = '<div class="neutral" style="padding: 20px; text-align: center;">⭐ Нет избранных комментариев</div>';
+            return;
+        }
+        container.innerHTML = favorites.map(fav => `
+            <div class="favorite-item">
+                <div class="comment-header">
+                    <img src="${fav.authorImg}" class="comment-author-img" loading="lazy">
+                    <span class="comment-author-name">${escapeHtml(fav.authorName)}</span>
+                    <span class="comment-date">${fav.date}</span>
+                </div>
+                <div class="comment-text">${escapeHtml(fav.text)}</div>
+                <div class="comment-likes">❤️ ${fav.likes}</div>
+                <div style="font-size: 0.7rem; color: #666; margin-top: 8px;">📹 ${escapeHtml(fav.videoTitle)}</div>
+                <button class="remove-fav-btn" data-id="${fav.id}">Удалить из избранного</button>
+            </div>
+        `).join('');
+        // Добавляем обработчики удаления
+        document.querySelectorAll('.remove-fav-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = btn.getAttribute('data-id');
+                removeFromFavorite(id);
+            });
+        });
+    }
+
+    // Генерация уникального ID для комментария
+    function generateCommentId(videoId, authorName, text, date) {
+        return `${videoId}_${authorName}_${date}_${text.substring(0, 30)}`;
+    }
+
+    // Загрузка комментариев с пагинацией
+    async function loadComments(videoId, pageToken = '') {
+        const commentsDiv = document.getElementById('commentsList');
+        if (pageToken === '') {
+            commentsDiv.innerHTML = '<div class="loading">Загрузка комментариев...</div>';
+            currentCommentsPageToken = null;
+        }
+        
+        try {
+            let url = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&key=${API_KEY}&maxResults=20`;
+            if (pageToken) url += `&pageToken=${pageToken}`;
+            
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            if (data.error) {
+                commentsDiv.innerHTML = `<div class="error">⚠️ Не удалось загрузить комментарии: ${data.error.message}. Возможно, комментарии отключены.</div>`;
+                return;
+            }
+            
+            const items = data.items || [];
+            if (pageToken === '') commentsDiv.innerHTML = '';
+            
+            if (items.length === 0 && pageToken === '') {
+                commentsDiv.innerHTML = '<div class="neutral" style="padding: 20px; text-align: center;">💬 Нет комментариев или они отключены.</div>';
+                document.getElementById('loadMoreComments').style.display = 'none';
+                return;
+            }
+            
+            // Получаем название видео для сохранения в избранное
+            const video = allVideos.find(v => v.id === videoId);
+            const videoTitle = video ? video.title : 'Видео';
+            
+            items.forEach(item => {
+                const snippet = item.snippet.topLevelComment.snippet;
+                const authorDisplayName = snippet.authorDisplayName;
+                const authorProfileImageUrl = snippet.authorProfileImageUrl;
+                const textDisplay = snippet.textDisplay;
+                const likeCount = snippet.likeCount;
+                const publishedAt = new Date(snippet.publishedAt).toLocaleDateString('ru-RU');
+                const commentId = generateCommentId(videoId, authorDisplayName, textDisplay, snippet.publishedAt);
+                const isFav = isFavorite(commentId);
+                
+                const commentHtml = `
+                    <div class="comment-item" data-comment-id="${commentId}">
+                        <div class="comment-header">
+                            <img src="${authorProfileImageUrl}" class="comment-author-img" loading="lazy">
+                            <span class="comment-author-name">${escapeHtml(authorDisplayName)}</span>
+                            <span class="comment-date">${publishedAt}</span>
+                        </div>
+                        <div class="comment-text">${escapeHtml(textDisplay)}</div>
+                        <div class="comment-likes">❤️ ${likeCount}</div>
+                        <button class="fav-btn ${isFav ? 'active' : ''}" data-id="${commentId}">${isFav ? '★' : '☆'}</button>
+                    </div>
+                `;
+                commentsDiv.insertAdjacentHTML('beforeend', commentHtml);
+                
+                // Сохраняем данные комментария для возможного добавления в избранное
+                const commentDiv = commentsDiv.lastElementChild;
+                const favBtn = commentDiv.querySelector('.fav-btn');
+                favBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const cid = favBtn.getAttribute('data-id');
+                    if (isFavorite(cid)) {
+                        removeFromFavorite(cid);
+                        favBtn.classList.remove('active');
+                        favBtn.textContent = '☆';
+                    } else {
+                        const commentData = {
+                            id: cid,
+                            authorName: authorDisplayName,
+                            authorImg: authorProfileImageUrl,
+                            text: textDisplay,
+                            likes: likeCount,
+                            date: publishedAt,
+                            videoId: videoId,
+                            videoTitle: videoTitle
+                        };
+                        addToFavorite(commentData);
+                        favBtn.classList.add('active');
+                        favBtn.textContent = '★';
+                    }
+                });
+            });
+            
+            currentCommentsPageToken = data.nextPageToken || null;
+            const loadMoreBtn = document.getElementById('loadMoreComments');
+            if (currentCommentsPageToken) {
+                loadMoreBtn.style.display = 'block';
+                const newBtn = loadMoreBtn.cloneNode(true);
+                loadMoreBtn.parentNode.replaceChild(newBtn, loadMoreBtn);
+                newBtn.onclick = () => loadComments(videoId, currentCommentsPageToken);
+                newBtn.style.display = 'block';
+            } else {
+                loadMoreBtn.style.display = 'none';
+            }
+        } catch (err) {
+            commentsDiv.innerHTML = '<div class="error">⚠️ Ошибка загрузки комментариев.</div>';
+            console.error(err);
+        }
+    }
+
+    // Сброс фильтров
+    function resetFilters() {
+        sortVideos('date', true);
+        renderFeed();
+        updateArrows('date', true);
+        highlightSortButton('date');
+    }
 
     function getGrowth24(videoId) {
         const history = analyticsData[videoId]?.history || [];
@@ -265,17 +943,14 @@
         });
     }
 
-    // Улучшенная функция обновления стрелки с гарантированной анимацией при любом клике
     function updateArrows(criteria, descending) {
         const btn = document.querySelector(`.sort-btn[data-sort="${criteria}"]`);
         if (!btn) return;
         const arrowSpan = btn.querySelector('.sort-arrow');
         if (arrowSpan) {
-            // ВСЕГДА проигрываем анимацию (сжатие и возврат)
             arrowSpan.style.transform = 'scale(0.7)';
             arrowSpan.style.opacity = '0.5';
             setTimeout(() => {
-                // Меняем символ на нужный (даже если он такой же — не страшно)
                 arrowSpan.textContent = descending ? '▼' : '▲';
                 arrowSpan.style.transform = 'scale(1)';
                 arrowSpan.style.opacity = '1';
@@ -284,7 +959,7 @@
     }
 
     function highlightSortButton(activeSort) {
-        document.querySelectorAll('.sort-btn').forEach(btn => {
+        document.querySelectorAll('.sort-btn[data-sort]').forEach(btn => {
             const sortVal = btn.getAttribute('data-sort');
             if (sortVal === activeSort) {
                 btn.classList.add('active');
@@ -302,10 +977,8 @@
                 btn.addEventListener('click', () => {
                     let newDescending;
                     if (currentSort === type) {
-                        // Тот же критерий — переключаем направление
                         newDescending = !sortOrders[type];
                     } else {
-                        // Новый критерий — ставим убывание (▼)
                         newDescending = true;
                     }
                     sortVideos(type, newDescending);
@@ -315,9 +988,14 @@
                 });
             }
         });
+        const resetBtn = document.getElementById('resetFilters');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', resetFilters);
+        }
     }
 
     function openDetails(id) {
+        currentVideoId = id;
         const v = allVideos.find(x => x.id === id);
         const history = analyticsData[id]?.history || [];
         
@@ -390,6 +1068,49 @@
             </div>
         `;
 
+        // Настройка вкладок
+        const statsPanel = document.getElementById('statsPanel');
+        const commentsPanel = document.getElementById('commentsPanel');
+        const favoritesPanel = document.getElementById('favoritesPanel');
+        const tabs = document.querySelectorAll('.tab-btn');
+        
+        tabs.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.tab === 'stats') btn.classList.add('active');
+        });
+        statsPanel.style.display = 'block';
+        commentsPanel.style.display = 'none';
+        favoritesPanel.style.display = 'none';
+        
+        const commentsDiv = document.getElementById('commentsList');
+        commentsDiv.innerHTML = '';
+        currentCommentsPageToken = null;
+        
+        tabs.forEach(btn => {
+            btn.onclick = () => {
+                const tab = btn.dataset.tab;
+                tabs.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                if (tab === 'stats') {
+                    statsPanel.style.display = 'block';
+                    commentsPanel.style.display = 'none';
+                    favoritesPanel.style.display = 'none';
+                } else if (tab === 'comments') {
+                    statsPanel.style.display = 'none';
+                    commentsPanel.style.display = 'block';
+                    favoritesPanel.style.display = 'none';
+                    if (commentsDiv.innerHTML === '' || commentsDiv.innerHTML.includes('Нет комментариев') || commentsDiv.innerHTML.includes('ошибка')) {
+                        loadComments(currentVideoId, '');
+                    }
+                } else if (tab === 'favorites') {
+                    statsPanel.style.display = 'none';
+                    commentsPanel.style.display = 'none';
+                    favoritesPanel.style.display = 'block';
+                    renderFavoritesList();
+                }
+            };
+        });
+
         document.getElementById('detailModal').classList.add('active');
         document.body.style.overflow = 'hidden';
 
@@ -431,8 +1152,30 @@
         document.body.style.overflow = 'auto';
     }
 
+    // Создание фоновых звёзд
+    function createStars() {
+        const starsContainer = document.getElementById('starsBg');
+        starsContainer.innerHTML = '';
+        const starCount = 80;
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.classList.add('star');
+            const size = Math.random() * 3 + 1;
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.top = `${Math.random() * 100}%`;
+            star.style.animationDuration = `${Math.random() * 10 + 5}s`;
+            star.style.animationDelay = `${Math.random() * 10}s`;
+            star.style.opacity = Math.random() * 0.5 + 0.2;
+            starsContainer.appendChild(star);
+        }
+    }
+
     loadApp().then(() => {
         setupSorting();
+        createStars();
+        renderFavoritesList();
     });
 </script>
 </body>
